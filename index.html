@@ -1,0 +1,1011 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Wuppertal Verkehr</title>
+
+<style>
+:root {
+  --bg: #101827;
+  --panel: #1b2738;
+  --panel2: #243348;
+  --text: #f4f7fb;
+  --muted: #a6b3c5;
+  --accent: #58a6ff;
+  --green: #39d98a;
+  --red: #ff7373;
+  --border: #34445a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  max-width: 760px;
+  margin: auto;
+  padding: 20px 15px 40px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.logo span { color: var(--accent); }
+
+.status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+h2 {
+  font-size: 17px;
+  margin: 20px 0 12px;
+}
+
+.search {
+  display: flex;
+  gap: 8px;
+}
+
+input {
+  min-width: 0;
+  flex: 1;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: var(--accent);
+  color: #081321;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.secondary {
+  background: var(--panel2);
+  color: var(--text);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.controls button.active {
+  background: var(--accent);
+  color: #081321;
+}
+
+.results {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.stop-option {
+  width: 100%;
+  text-align: left;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.stop-option small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+.board-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.board-head h2 { margin: 0; }
+
+.departures {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.direction {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.direction-title {
+  padding: 14px;
+  background: var(--panel2);
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.departure {
+  padding: 13px 14px;
+  display: grid;
+  grid-template-columns: 65px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border-top: 1px solid var(--border);
+}
+
+.line {
+  background: #dbeafe;
+  color: #10233d;
+  border-radius: 7px;
+  padding: 6px 5px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.time {
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.destination {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.platform {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.delay {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+.on-time {
+  color: var(--green);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.message {
+  color: var(--muted);
+  text-align: center;
+  padding: 24px 10px;
+  line-height: 1.5;
+}
+
+.error { color: var(--red); }
+
+.footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 28px;
+}
+
+@media (max-width: 420px) {
+  .app { padding: 16px 12px 30px; }
+  .departure { grid-template-columns: 55px 1fr auto; }
+  .time { font-size: 17px; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">Wuppertal <span>Verkehr</span></div>
+  <div class="status" id="status">Готово</div>
+</header>
+
+<h2>Найти остановку</h2>
+
+<div class="search">
+  <input
+    id="searchInput"
+    placeholder="Например, Wuppertal Hbf"
+    autocomplete="off"
+  >
+  <button id="searchButton">Найти</button>
+</div>
+
+<div class="controls">
+  <button class="active" id="busFilter">Автобусы</button>
+  <button class="secondary" id="allFilter">Весь транспорт</button>
+</div>
+
+<div id="searchResults" class="results"></div>
+
+<div class="board-head">
+  <h2 id="selectedStop">Отправления</h2>
+  <button class="secondary" id="refreshButton">↻</button>
+</div>
+
+<div id="board" class="departures">
+  <div class="message">
+    Найди остановку, чтобы увидеть отправления.
+  </div>
+</div>
+
+<div class="pagination" id="pagination" hidden>
+  <button class="secondary" id="prevButton">Назад</button>
+  <span id="pageLabel">1 / 1</span>
+  <button class="secondary" id="nextButton">Далее</button>
+</div>
+
+<div class="footer">
+  Данные: VRR OpenService · Обновление каждые 30 секунд
+</div>
+
+</div>
+
+<script>
+"use strict";
+
+// ==========================================
+// CONFIGURATION
+// ==========================================
+
+const API_BASE =
+  "https://openservice.vrr.de/openservice/";
+
+const PAGE_SIZE = 10;
+const DEPARTURES_PER_DIRECTION = 4;
+const REFRESH_INTERVAL = 30000;
+
+const $ = id => document.getElementById(id);
+
+// ==========================================
+// APPLICATION STATE
+// ==========================================
+
+let selectedStop = null;
+let stopGroups = [];
+let directionGroups = [];
+let currentPage = 0;
+let transportFilter = "bus";
+let refreshTimer = null;
+let loading = false;
+
+// ==========================================
+// API HELPERS
+// ==========================================
+
+async function apiRequest(endpoint, params) {
+  const url = new URL(endpoint, API_BASE);
+
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error("VRR HTTP " + response.status);
+    }
+
+    return await response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// ==========================================
+// NORMALIZATION
+// ==========================================
+
+function normalizeName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getStopId(location) {
+  return (
+    location.id ||
+    location.statID ||
+    location.stateless ||
+    location.ref?.id ||
+    location.point?.id ||
+    null
+  );
+}
+
+// ==========================================
+// STOP SEARCH
+// ==========================================
+
+async function searchStops() {
+  const query = $("searchInput").value.trim();
+
+  if (query.length < 2) {
+    showMessage("Введи хотя бы две буквы.");
+    return;
+  }
+
+  setStatus("Поиск...");
+
+  $("searchResults").innerHTML = "";
+  $("board").innerHTML = "";
+
+  try {
+    const data = await apiRequest(
+      "XML_STOPFINDER_REQUEST",
+      {
+        outputFormat: "rapidJSON",
+        locationServerActive: "1",
+        type_sf: "stop",
+        name_sf: query,
+        anyObjFilter_sf: "2"
+      }
+    );
+
+    const locations = extractLocations(data);
+
+    if (!locations.length) {
+      showMessage("Остановки не найдены.");
+      setStatus("Готово");
+      return;
+    }
+
+    stopGroups = mergeStops(locations);
+
+    renderStopResults();
+    setStatus("Найдено: " + stopGroups.length);
+
+  } catch (error) {
+    console.error("StopFinder error:", error);
+
+    showMessage(
+      "Не удалось выполнить поиск. " +
+      explainError(error),
+      true
+    );
+
+    setStatus("Ошибка");
+  }
+}
+
+function extractLocations(data) {
+  if (Array.isArray(data.locations)) {
+    return data.locations;
+  }
+
+  if (Array.isArray(data.stopFinder?.points)) {
+    return data.stopFinder.points;
+  }
+
+  if (Array.isArray(data.points)) {
+    return data.points;
+  }
+
+  return [];
+}
+
+// Объединяем ID остановок с одинаковым названием.
+// Это позволяет запрашивать отправления с обеих сторон улицы.
+
+function mergeStops(locations) {
+  const groups = new Map();
+
+  for (const location of locations) {
+    const id = getStopId(location);
+    const name =
+      location.name ||
+      location.disassembledName ||
+      location.object?.name;
+
+    if (!id || !name) continue;
+
+    const key = normalizeName(name);
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        name,
+        ids: [],
+        type: location.type || "stop"
+      });
+    }
+
+    const group = groups.get(key);
+
+    if (!group.ids.includes(String(id))) {
+      group.ids.push(String(id));
+    }
+  }
+
+  return [...groups.values()];
+}
+
+function renderStopResults() {
+  const container = $("searchResults");
+  container.innerHTML = "";
+
+  stopGroups.forEach((stop, index) => {
+    const button = document.createElement("button");
+    button.className = "stop-option";
+
+    const name = document.createElement("strong");
+    name.textContent = stop.name;
+
+    const details = document.createElement("small");
+    details.textContent =
+      stop.ids.length + " идентификатор(а) остановки";
+
+    button.append(name, details);
+
+    button.addEventListener("click", () => {
+      selectStop(index);
+    });
+
+    container.appendChild(button);
+  });
+}
+
+// ==========================================
+// SELECT STOP
+// ==========================================
+
+async function selectStop(index) {
+  selectedStop = stopGroups[index];
+
+  currentPage = 0;
+
+  $("selectedStop").textContent = selectedStop.name;
+  $("searchResults").innerHTML = "";
+
+  await refreshDepartures();
+  startAutoRefresh();
+}
+
+// ==========================================
+// DEPARTURES
+// ==========================================
+
+async function refreshDepartures() {
+  if (!selectedStop || loading) return;
+
+  loading = true;
+  setStatus("Обновление...");
+
+  try {
+    const requests = selectedStop.ids.map(id =>
+      apiRequest("XML_DM_REQUEST", {
+        outputFormat: "rapidJSON",
+        type_dm: "stop",
+        name_dm: id,
+        mode: "direct",
+        useRealtime: "1",
+        useProxFootSearch: "0",
+        limit: "100"
+      }).catch(error => {
+        console.error("Departure request failed:", id, error);
+        return null;
+      })
+    );
+
+    const responses = await Promise.all(requests);
+
+    let departures = [];
+
+    for (const response of responses) {
+      if (!response) continue;
+
+      departures.push(...extractDepartures(response));
+    }
+
+    departures = deduplicateDepartures(departures);
+    departures = departures.filter(isFutureDeparture);
+
+    if (transportFilter === "bus") {
+      departures = departures.filter(isBus);
+    }
+
+    departures.sort((a, b) => {
+      return a.timestamp - b.timestamp;
+    });
+
+    directionGroups = groupByDirection(departures);
+
+    currentPage = Math.min(
+      currentPage,
+      Math.max(0, Math.ceil(directionGroups.length / PAGE_SIZE) - 1)
+    );
+
+    renderBoard();
+
+    setStatus(
+      "Обновлено " +
+      new Date().toLocaleTimeString("de-DE", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    );
+
+  } catch (error) {
+    console.error("Departure error:", error);
+
+    showMessage(
+      "Не удалось получить отправления. " +
+      explainError(error),
+      true
+    );
+
+    setStatus("Ошибка");
+
+  } finally {
+    loading = false;
+  }
+}
+
+function extractDepartures(data) {
+  if (Array.isArray(data.departureList)) {
+    return data.departureList;
+  }
+
+  if (Array.isArray(data.stopEvents)) {
+    return data.stopEvents;
+  }
+
+  return [];
+}
+
+// ==========================================
+// DEPARTURE PARSING
+// ==========================================
+
+function parseDate(value) {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    const date = new Date(value);
+
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  if (typeof value === "object") {
+    const hour = Number(value.hour);
+    const minute = Number(value.minute);
+
+    if (Number.isFinite(hour) && Number.isFinite(minute)) {
+      const date = new Date();
+
+      date.setHours(hour, minute, 0, 0);
+
+      if (date.getTime() < Date.now() - 60000) {
+        date.setDate(date.getDate() + 1);
+      }
+
+      return date;
+    }
+  }
+
+  return null;
+}
+
+function parseDeparture(item) {
+  const transport = item.transportation || {};
+  const line = item.servingLine || {};
+
+  const planned =
+    parseDate(item.departureTimePlanned) ||
+    parseDate(item.dateTime) ||
+    parseDate(item.departureTime);
+
+  const estimated =
+    parseDate(item.departureTimeEstimated) ||
+    parseDate(item.realDateTime) ||
+    planned;
+
+  if (!planned) return null;
+
+  const destination =
+    transport.destination?.name ||
+    transport.destination ||
+    line.direction ||
+    item.direction ||
+    "Направление не указано";
+
+  const number =
+    transport.disassembledName ||
+    transport.number ||
+    line.number ||
+    transport.name ||
+    "?";
+
+  const platform =
+    item.location?.properties?.platformName ||
+    item.platformName ||
+    item.platform ||
+    item.stop?.platformName ||
+    "";
+
+  const delay = Math.round(
+    (estimated.getTime() - planned.getTime()) / 60000
+  );
+
+  const product =
+    transport.product?.name ||
+    transport.product ||
+    line.motType ||
+    "";
+
+  return {
+    line: String(number),
+    destination: String(destination),
+    platform: String(platform),
+    product: String(product),
+    planned,
+    estimated,
+    timestamp: estimated.getTime(),
+    delay
+  };
+}
+
+function isFutureDeparture(item) {
+  return item.timestamp >= Date.now() - 60000;
+}
+
+function isBus(item) {
+  const text = (
+    item.product + " " + item.line
+  ).toLowerCase();
+
+  if (/bus|busse|expressbus|nachtbus/.test(text)) {
+    return true;
+  }
+
+  if (/^(s|re|rb|u|tram|ice|ic)/i.test(item.line)) {
+    return false;
+  }
+
+  // В некоторых ответах EFA нет названия типа транспорта.
+  // Такие записи не исключаем автоматически.
+  return true;
+}
+
+function deduplicateDepartures(items) {
+  const unique = new Map();
+
+  for (const raw of items) {
+    const item = parseDeparture(raw);
+
+    if (!item) continue;
+
+    const key = [
+      item.line,
+      item.destination,
+      item.timestamp,
+      item.platform
+    ].join("|");
+
+    if (!unique.has(key)) {
+      unique.set(key, item);
+    }
+  }
+
+  return [...unique.values()];
+}
+
+// ==========================================
+// GROUPING
+// ==========================================
+
+function groupByDirection(departures) {
+  const groups = new Map();
+
+  for (const departure of departures) {
+    const key = normalizeName(departure.destination);
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        destination: departure.destination,
+        departures: []
+      });
+    }
+
+    groups.get(key).departures.push(departure);
+  }
+
+  return [...groups.values()]
+    .map(group => ({
+      ...group,
+      departures: group.departures
+        .sort((a, b) => a.timestamp - b.timestamp)
+        .slice(0, DEPARTURES_PER_DIRECTION)
+    }))
+    .sort((a, b) =>
+      a.destination.localeCompare(b.destination, "de")
+    );
+}
+
+// ==========================================
+// RENDER BOARD
+// ==========================================
+
+function renderBoard() {
+  const container = $("board");
+  container.innerHTML = "";
+
+  if (!directionGroups.length) {
+    showMessage("На ближайшее время отправлений не найдено.");
+    $("pagination").hidden = true;
+    return;
+  }
+
+  const totalPages = Math.ceil(
+    directionGroups.length / PAGE_SIZE
+  );
+
+  const start = currentPage * PAGE_SIZE;
+
+  const pageGroups = directionGroups.slice(
+    start,
+    start + PAGE_SIZE
+  );
+
+  pageGroups.forEach(group => {
+    const card = document.createElement("div");
+    card.className = "direction";
+
+    const title = document.createElement("div");
+    title.className = "direction-title";
+
+    const destination = document.createElement("span");
+    destination.textContent = group.destination;
+
+    const count = document.createElement("small");
+    count.textContent = group.departures.length + " отправ.";
+
+    title.append(destination, count);
+    card.appendChild(title);
+
+    group.departures.forEach(dep => {
+      const row = document.createElement("div");
+      row.className = "departure";
+
+      const line = document.createElement("div");
+      line.className = "line";
+      line.textContent = dep.line;
+
+      const info = document.createElement("div");
+
+      const time = document.createElement("div");
+      time.className = "time";
+      time.textContent = formatTime(dep.estimated);
+
+      const detail = document.createElement("div");
+      detail.className = "destination";
+      detail.textContent =
+        "План: " + formatTime(dep.planned);
+
+      const delay = document.createElement("div");
+
+      if (dep.delay > 0) {
+        delay.className = "delay";
+        delay.textContent = "+" + dep.delay + " мин.";
+      } else if (dep.delay < 0) {
+        delay.className = "on-time";
+        delay.textContent = Math.abs(dep.delay) + " мин. раньше";
+      } else {
+        delay.className = "on-time";
+        delay.textContent = "По расписанию";
+      }
+
+      info.append(time, detail, delay);
+
+      const platform = document.createElement("div");
+      platform.className = "platform";
+      platform.textContent = dep.platform
+        ? "Платф. " + dep.platform
+        : "";
+
+      row.append(line, info, platform);
+      card.appendChild(row);
+    });
+
+    container.appendChild(card);
+  });
+
+  $("pagination").hidden = totalPages <= 1;
+  $("pageLabel").textContent =
+    (currentPage + 1) + " / " + totalPages;
+
+  $("prevButton").disabled = currentPage === 0;
+  $("nextButton").disabled =
+    currentPage >= totalPages - 1;
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+// ==========================================
+// FILTERS AND PAGINATION
+// ==========================================
+
+$("busFilter").addEventListener("click", () => {
+  transportFilter = "bus";
+
+  $("busFilter").className = "active";
+  $("allFilter").className = "secondary";
+
+  refreshDepartures();
+});
+
+$("allFilter").addEventListener("click", () => {
+  transportFilter = "all";
+
+  $("allFilter").className = "active";
+  $("busFilter").className = "secondary";
+
+  refreshDepartures();
+});
+
+$("prevButton").addEventListener("click", () => {
+  if (currentPage > 0) {
+    currentPage--;
+    renderBoard();
+  }
+});
+
+$("nextButton").addEventListener("click", () => {
+  const pages = Math.ceil(directionGroups.length / PAGE_SIZE);
+
+  if (currentPage < pages - 1) {
+    currentPage++;
+    renderBoard();
+  }
+});
+
+$("searchButton").addEventListener("click", searchStops);
+
+$("searchInput").addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    searchStops();
+  }
+});
+
+$("refreshButton").addEventListener("click", () => {
+  refreshDepartures();
+});
+
+// ==========================================
+// AUTO REFRESH
+// ==========================================
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+
+  refreshTimer = setInterval(() => {
+    if (selectedStop && !document.hidden) {
+      refreshDepartures();
+    }
+  }, REFRESH_INTERVAL);
+}
+
+function stopAutoRefresh() {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && selectedStop) {
+    refreshDepartures();
+  }
+});
+
+// ==========================================
+// UI HELPERS
+// ==========================================
+
+function setStatus(text) {
+  $("status").textContent = text;
+}
+
+function showMessage(text, error = false) {
+  const board = $("board");
+
+  board.innerHTML = "";
+
+  const message = document.createElement("div");
+  message.className =
+    error ? "message error" : "message";
+
+  message.textContent = text;
+  board.appendChild(message);
+}
+
+function explainError(error) {
+  if (error.name === "AbortError") {
+    return "Превышено время ожидания.";
+  }
+
+  if (error instanceof TypeError) {
+    return "Возможна блокировка CORS браузером. " +
+      "Тогда потребуется небольшой API-посредник.";
+  }
+
+  return error.message || "Неизвестная ошибка.";
+}
+
+// ==========================================
+// START
+// ==========================================
+
+console.log("Wuppertal Verkehr started.");
+console.log("VRR API:", API_BASE);
+
+</script>
+</body>
+</html>
