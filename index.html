@@ -712,7 +712,7 @@ const I18N = {
     statusUpdatedPartial: "Aktualisiert {time} · teilweise",
     statusError: "Fehler",
 
-    idsCount: "Kennungen: {n}",
+    idsCount: "Haltestellen-ID: {ids}",
     searchTooShort: "Bitte mindestens zwei Zeichen eingeben.",
     searchNone: "Keine Haltestellen in Wuppertal gefunden.",
     searchFailed: "Die Suche ist fehlgeschlagen. {reason}",
@@ -796,7 +796,7 @@ const I18N = {
     statusUpdatedPartial: "Обновлено {time} · частично",
     statusError: "Ошибка",
 
-    idsCount: "Идентификаторов: {n}",
+    idsCount: "ID остановки: {ids}",
     searchTooShort: "Введи хотя бы две буквы.",
     searchNone: "Остановки в Вуппертале не найдены.",
     searchFailed: "Не удалось выполнить поиск. {reason}",
@@ -1163,11 +1163,11 @@ function loadRecent() {
 }
 
 function pushRecent(stop) {
-  const key = normalizeName(stop.name);
+  const key = stopKey(stop.name);
 
   recentStops = [
     { name: stop.name, ids: stop.ids },
-    ...recentStops.filter(item => normalizeName(item.name) !== key)
+    ...recentStops.filter(item => stopKey(item.name) !== key)
   ].slice(0, MAX_RECENT);
 
   storageSet(STORAGE_RECENT, JSON.stringify(recentStops));
@@ -1286,10 +1286,26 @@ function isWuppertalStop(location, id, name) {
   );
 }
 
-// Stops with the same name (usually the two sides of a street) become ONE
-// entry with several station ids; the board loads all of them.
+// A name key that ignores everything that only differs in spelling:
+// "Wuppertal, Blankstraße", "Blankstrasse" and "Wuppertal Blankstr." all
+// become "blankstr", "Wuppertal, Wuppertal Hbf" and "Hbf" become "hbf".
+function stopKey(name) {
+  const key = normalizeName(name)
+    .replace(/ß/g, "ss")
+    .replace(/wuppertal/g, "")
+    .replace(/strasse/g, "str")
+    .replace(/[^a-z0-9]/g, "");
+
+  return key || normalizeName(name);
+}
+
+// Merges search results that describe the SAME stop into ONE entry:
+//  - entries with the same (normalized) name, usually the two sides of a street,
+//    are one stop with several station ids; the board loads all of them;
+//  - entries that share a station id are the same stop even if VRR spells
+//    the name differently, so they must not be offered twice.
 function mergeStops(locations) {
-  const groups = new Map();
+  const groups = [];
 
   for (const location of locations) {
     const rawId = getStopId(location);
@@ -1299,21 +1315,52 @@ function mergeStops(locations) {
     if (!isWuppertalStop(location, rawId, name)) continue;
 
     const id = toStationId(rawId);
-    const key = normalizeName(name);
+    const key = stopKey(name);
 
-    if (!groups.has(key)) {
-      groups.set(key, { name, ids: [] });
+    const matches = groups.filter(group =>
+      group.keys.has(key) || group.ids.includes(id)
+    );
+
+    let target;
+
+    if (!matches.length) {
+      target = { name, keys: new Set(), ids: [] };
+      groups.push(target);
+    } else {
+      target = matches[0];
+
+      // This entry links several groups together -> fold them into one.
+      matches.slice(1).forEach(other => {
+        other.ids.forEach(otherId => {
+          if (!target.ids.includes(otherId)) target.ids.push(otherId);
+        });
+        other.keys.forEach(otherKey => target.keys.add(otherKey));
+        groups.splice(groups.indexOf(other), 1);
+      });
+
+      // Prefer the spelling that includes the city, e.g. "Wuppertal, Hbf".
+      if (!/^wuppertal/i.test(target.name) && /^wuppertal/i.test(name)) {
+        target.name = name;
+      }
     }
 
-    const group = groups.get(key);
+    target.keys.add(key);
 
-    if (!group.ids.includes(id) && group.ids.length < MAX_IDS_PER_STOP) {
-      group.ids.push(id);
-    }
+    if (!target.ids.includes(id)) target.ids.push(id);
   }
 
   // Keep the order from VRR: the best match comes first.
-  return [...groups.values()].slice(0, MAX_SEARCH_RESULTS);
+  return groups
+    .slice(0, MAX_SEARCH_RESULTS)
+    .map(group => ({
+      name: group.name,
+      ids: group.ids.slice(0, MAX_IDS_PER_STOP)
+    }));
+}
+
+// 'de:05124:11376' -> '11376' (short form shown in the result list).
+function shortId(id) {
+  return String(id).split(":").pop();
 }
 
 function renderStopResults() {
@@ -1325,7 +1372,7 @@ function renderStopResults() {
     button.type = "button";
 
     const name = el("strong", "", stop.name);
-    const details = el("small", "", t("idsCount", { n: stop.ids.length }));
+    const details = el("small", "", t("idsCount", { ids: stop.ids.map(shortId).join(", ") }));
 
     button.append(name, details);
     button.addEventListener("click", () => selectStop(stop));
