@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101827">
+<meta name="color-scheme" content="dark">
 <title>Wuppertal Verkehr</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -25,6 +25,8 @@
 
 * { box-sizing: border-box; }
 
+html { -webkit-text-size-adjust: 100%; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -44,7 +46,7 @@ button, input { font: inherit; }
 header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 22px;
 }
@@ -52,14 +54,46 @@ header {
 .logo {
   font-size: 22px;
   font-weight: 800;
+  padding-top: 3px;
 }
 
 .logo span { color: var(--accent); }
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 7px;
+}
 
 .status {
   color: var(--muted);
   font-size: 12px;
   text-align: right;
+  min-height: 15px;
+}
+
+/* ---------- language switch ---------- */
+
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.lang-switch button {
+  background: transparent;
+  color: var(--muted);
+  border-radius: 0;
+  padding: 6px 11px;
+  font-size: 12px;
+  letter-spacing: .5px;
+}
+
+.lang-switch button.active {
+  background: var(--accent);
+  color: #081321;
 }
 
 h2 {
@@ -97,6 +131,12 @@ button {
   font-weight: bold;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+.departure:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 button:disabled {
@@ -141,8 +181,39 @@ button:disabled {
 .stop-option small {
   display: block;
   color: var(--muted);
+  font-weight: normal;
   margin-top: 5px;
 }
+
+.search-message {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.search-message.error { color: var(--red); }
+
+/* ---------- recent stops ---------- */
+
+.recent { margin-top: 4px; }
+
+.recent-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+/* ---------- board ---------- */
 
 .board-head {
   display: flex;
@@ -152,13 +223,17 @@ button:disabled {
   margin-top: 24px;
 }
 
-.board-head h2 { margin: 0; }
+.board-head h2 { margin: 0; overflow-wrap: anywhere; }
 
 .board-tools {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
+#refreshButton.spinning { animation: spin 1s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .filter-row {
   display: flex;
@@ -194,6 +269,19 @@ button:disabled {
   margin-bottom: 7px;
 }
 
+.summary {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.summary .ok { color: var(--green); }
+.summary .late { color: var(--orange); }
+.summary .bad { color: var(--red); }
+
 .departures {
   margin-top: 12px;
   display: grid;
@@ -219,7 +307,7 @@ button:disabled {
 .direction-title small {
   color: var(--muted);
   font-weight: normal;
-  white-space: nowrap;
+  text-align: right;
 }
 
 .departure {
@@ -229,6 +317,13 @@ button:disabled {
   gap: 10px;
   align-items: center;
   border-top: 1px solid var(--border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.departure:hover,
+.departure[aria-expanded="true"] {
+  background: rgba(88, 166, 255, .07);
 }
 
 .line {
@@ -241,9 +336,27 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+.time-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 9px;
+}
+
 .time {
   font-size: 19px;
   font-weight: bold;
+}
+
+.time.struck {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.eta {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--accent);
 }
 
 .destination {
@@ -252,38 +365,149 @@ button:disabled {
   margin-top: 4px;
 }
 
-.platform {
+.delay,
+.delay-minor,
+.on-time,
+.early,
+.cancelled,
+.no-rt {
   font-size: 12px;
+  margin-top: 4px;
+}
+
+.delay { color: var(--red); font-weight: bold; }
+.delay-minor { color: var(--orange); font-weight: bold; }
+.on-time { color: var(--green); }
+.early { color: var(--orange); }
+.cancelled { color: var(--red); font-weight: bold; }
+.no-rt { color: var(--muted); }
+
+.chev {
   color: var(--muted);
+  font-size: 13px;
+  transition: transform .15s;
   text-align: right;
+}
+
+.departure[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+/* ---------- stop sequence of a trip ---------- */
+
+.stops-panel {
+  padding: 4px 14px 16px;
+  background: rgba(0, 0, 0, .14);
+  border-top: 1px dashed var(--border);
+}
+
+.stops-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.stops-title small {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.stops-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.stops-note.error { color: var(--red); }
+
+.stops-note button {
+  padding: 7px 11px;
+  font-size: 12px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  flex: none;
+}
+
+.stop-list {
+  list-style: none;
+  margin: 12px 0 0 7px;
+  padding: 0;
+  border-left: 2px solid var(--accent);
+}
+
+.stop-list li {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0 7px 16px;
+  font-size: 14px;
+}
+
+.stop-list li::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+}
+
+.stop-list li.here::before,
+.stop-list li.end::before {
+  background: var(--accent);
+}
+
+.stop-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stop-name small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.stop-time {
   white-space: nowrap;
-}
-
-.delay {
-  color: var(--red);
-  font-size: 12px;
   font-weight: bold;
-  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
-.on-time {
-  color: var(--green);
-  font-size: 12px;
-  margin-top: 4px;
+.stop-time small {
+  margin-left: 6px;
+  font-size: 11px;
 }
 
-.early {
-  color: var(--orange);
+.stop-time .late { color: var(--orange); }
+.stop-time .bad { color: var(--red); }
+
+.stops-toggle {
+  margin-top: 10px;
+  padding: 8px 12px;
   font-size: 12px;
-  margin-top: 4px;
 }
 
-.cancelled {
-  color: var(--red);
-  font-size: 12px;
-  font-weight: bold;
-  margin-top: 4px;
-}
+/* ---------- misc ---------- */
 
 .pagination {
   display: flex;
@@ -300,7 +524,17 @@ button:disabled {
   line-height: 1.5;
 }
 
+.message button { margin-top: 12px; }
+
 .error { color: var(--red); }
+
+.data-note {
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+}
 
 .footer {
   text-align: center;
@@ -314,7 +548,11 @@ button:disabled {
   .app { padding: 16px 12px calc(30px + env(safe-area-inset-bottom)); }
   .departure { grid-template-columns: 55px minmax(0, 1fr) auto; }
   .time { font-size: 17px; }
-  .platform { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner, #refreshButton.spinning { animation-duration: 3s; }
+  .chev { transition: none; }
 }
 </style>
 </head>
@@ -324,58 +562,71 @@ button:disabled {
 
 <header>
   <div class="logo">Wuppertal <span>Verkehr</span></div>
-  <div class="status" id="status">Готово</div>
+
+  <div class="header-right">
+    <div class="lang-switch" id="langSwitch" role="group" data-i18n-aria="langLabel">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="ru">RU</button>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
 </header>
 
-<h2>Найти остановку</h2>
+<h2 data-i18n="searchTitle"></h2>
 
 <div class="search">
   <input
     id="searchInput"
-    placeholder="Например, Wuppertal Hbf"
+    data-i18n-placeholder="searchPlaceholder"
     autocomplete="off"
     maxlength="60"
   >
-  <button id="searchButton">Найти</button>
+  <button id="searchButton" data-i18n="searchButton"></button>
 </div>
 
 <div class="controls">
-  <button class="active" id="busFilter">Автобусы</button>
-  <button class="secondary" id="allFilter">Весь транспорт</button>
+  <button class="active" id="busFilter" data-i18n="filterBus"></button>
+  <button class="secondary" id="allFilter" data-i18n="filterAll"></button>
 </div>
 
 <div id="searchResults" class="results"></div>
+<div id="searchMessage" class="search-message" hidden></div>
+
+<div class="recent" id="recent" hidden>
+  <div class="filter-caption" data-i18n="recent"></div>
+  <div class="recent-list" id="recentList"></div>
+</div>
 
 <div class="board-head">
-  <h2 id="selectedStop">Отправления</h2>
+  <h2 id="selectedStop"></h2>
   <div class="board-tools">
-    <button class="secondary" id="refreshButton" aria-label="Обновить">↻</button>
+    <button class="secondary" id="refreshButton" data-i18n-aria="refresh">↻</button>
   </div>
 </div>
 
 <div class="filter-row">
-  <button class="secondary" id="delayedFilter">Только задержанные</button>
-  <button class="secondary" id="allLinesFilter">Все маршруты</button>
+  <button class="secondary" id="delayedFilter"></button>
+  <button class="secondary" id="allLinesFilter"></button>
 </div>
 
-<div class="filter-caption" id="lineCaption" hidden>ФИЛЬТР ПО МАРШРУТУ</div>
+<div class="filter-caption" id="lineCaption" hidden data-i18n="lineCaption"></div>
 <div class="line-filters" id="lineFilters"></div>
 
-<div id="board" class="departures">
-  <div class="message">
-    Найди остановку, чтобы увидеть отправления.
-  </div>
-</div>
+<div class="summary" id="summary" hidden></div>
+
+<div id="board" class="departures"></div>
+
+<div class="data-note" id="dataNote" hidden></div>
 
 <div class="pagination" id="pagination" hidden>
-  <button class="secondary" id="prevButton">Назад</button>
+  <button class="secondary" id="prevButton" data-i18n="prev"></button>
   <span id="pageLabel">1 / 1</span>
-  <button class="secondary" id="nextButton">Далее</button>
+  <button class="secondary" id="nextButton" data-i18n="next"></button>
 </div>
 
 <div class="footer">
-  Данные: VRR OpenService<br>
-  Автоматическое обновление каждые 30 секунд
+  <span data-i18n="footerSource"></span><br>
+  <span data-i18n="footerRefresh"></span>
 </div>
 
 </div>
@@ -387,23 +638,230 @@ button:disabled {
 // CONFIGURATION
 // =====================================================
 
+// Cloudflare Worker that proxies the VRR EFA API (adds CORS headers).
+// IMPORTANT: it must forward ALL query parameters unchanged, including
+// itdDate, itdTime, depType and includeCompleteStopSeq.
 const API_BASE = "https://wuppertal-vrr-api.isychev10.workers.dev/";
 
 const CITY_NAME = "Wuppertal";
 const CITY_ID_PREFIX = "de:05124:";
 
+const MAX_SEARCH_RESULTS = 10;
+const MAX_IDS_PER_STOP = 6;
+
 const PAGE_SIZE = 10;
 const DEPARTURES_PER_DIRECTION = 4;
 const DEPARTURES_PER_DIRECTION_WITH_LINE = 6;
-const MAX_LINE_BUTTONS = 20;
+const MAX_LINE_BUTTONS = 24;
+const DELAYED_MIN = 3;          // "only delayed" threshold (minutes)
+const MAJOR_DELAY_MIN = 5;      // >= this is shown in red
+
+const EVENTS_LIMIT = 80;        // events per EFA request
+const DEEP_HORIZON_MIN = 120;   // how far ahead a selected line is loaded
+const DEEP_MAX_PAGES = 5;       // max requests per station in deep mode
+
+const TRIP_EVENTS_LIMIT = 60;   // events requested to find one trip
+const TRIP_PREVIEW_COUNT = 8;   // stops shown before "show all"
+const TRIP_TTL = 60000;         // stop sequence cache lifetime
 
 const REFRESH_INTERVAL = 30000;
+const ETA_TICK_INTERVAL = 20000;
 const REQUEST_TIMEOUT = 20000;
 const CACHE_TTL = 15000;
+
+const MAX_RECENT = 5;
+const STORAGE_LANG = "wv_lang";
+const STORAGE_RECENT = "wv_recent";
 
 const BUS_CLASSES = new Set([5, 6, 7]);
 
 const $ = id => document.getElementById(id);
+
+// =====================================================
+// TRANSLATIONS (German is the default language)
+// =====================================================
+
+const I18N = {
+  de: {
+    docTitle: "Wuppertal Verkehr",
+    langLabel: "Sprache",
+    refresh: "Aktualisieren",
+
+    searchTitle: "Haltestelle suchen",
+    searchPlaceholder: "z. B. Wuppertal Hbf",
+    searchButton: "Suchen",
+    filterBus: "Busse",
+    filterAll: "Alle Verkehrsmittel",
+    recent: "ZULETZT VERWENDET",
+
+    boardTitle: "Abfahrten",
+    boardHint: "Suche eine Haltestelle, um Abfahrten zu sehen.",
+    filterDelayed: "Nur Verspätungen",
+    filterAllLines: "Alle Linien",
+    filterLineSel: "Linie {line} ×",
+    lineCaption: "NACH LINIE FILTERN",
+
+    footerSource: "Daten: VRR OpenService",
+    footerRefresh: "Automatische Aktualisierung alle 30 Sekunden",
+
+    statusReady: "Bereit",
+    statusSearching: "Suche…",
+    statusFound: "{n} gefunden",
+    statusUpdating: "Aktualisiere…",
+    statusUpdated: "Aktualisiert {time}",
+    statusUpdatedPartial: "Aktualisiert {time} · teilweise",
+    statusError: "Fehler",
+
+    idsCount: "Kennungen: {n}",
+    searchTooShort: "Bitte mindestens zwei Zeichen eingeben.",
+    searchNone: "Keine Haltestellen in Wuppertal gefunden.",
+    searchFailed: "Die Suche ist fehlgeschlagen. {reason}",
+
+    loadingBoard: "Lade Abfahrten…",
+    departuresFailed: "Abfahrten konnten nicht geladen werden. {reason}",
+    retry: "Erneut versuchen",
+    noDepartures: "Zurzeit keine Abfahrten gefunden.",
+    noBuses: "Zurzeit keine Busabfahrten. Andere Verkehrsmittel: {n}. Tippe auf „Alle Verkehrsmittel“.",
+    noDelayed: "Keine Abfahrten mit mindestens {min} Min. Verspätung und keine Ausfälle.",
+    noLine: "Für Linie {line} gibt es zurzeit keine Abfahrten. Tippe auf „Alle Linien“.",
+
+    countOne: "{n} Abfahrt",
+    countMany: "{n} Abfahrten",
+    platform: "Steig {p}",
+    planned: "Plan: {time}",
+    cancelled: "Fällt aus",
+    delay: "+{n} Min. Verspätung",
+    early: "{n} Min. früher",
+    onTime: "Pünktlich",
+    noRealtime: "Keine Echtzeitdaten",
+
+    etaNow: "jetzt",
+    etaMin: "in {n} Min.",
+    etaHours: "in {h} Std. {m} Min.",
+
+    prev: "Zurück",
+    next: "Weiter",
+
+    sumOnTime: "pünktlich: {n}",
+    sumLate: "verspätet: {n} (max. +{max} Min.)",
+    sumCancelled: "Ausfälle: {n}",
+    dataUntil: "Daten von VRR bis {time}",
+    singleDirection: "Nur eine Fahrtrichtung: Im Datenfenster von VRR gibt es keine weiteren Fahrten der Linie {line}.",
+
+    tripTitle: "Nächste Haltestellen",
+    tripCount: "{n} Halte",
+    tripLoading: "Lade Haltestellen…",
+    tripError: "Haltestellenfolge konnte nicht geladen werden.",
+    tripEmpty: "VRR liefert für diese Fahrt keine Haltestellenfolge.",
+    tripHere: "Hier",
+    tripEnd: "Endhaltestelle",
+    tripShowAll: "Alle {n} Haltestellen anzeigen",
+    tripShowLess: "Weniger anzeigen",
+
+    errTimeout: "Zeitüberschreitung.",
+    errNetwork: "Netzwerkfehler oder CORS-Problem.",
+    err_http: "VRR-Fehler (HTTP {code}).",
+    err_json: "VRR hat ungültige Daten geliefert.",
+    err_allFailed: "Von keiner Haltestellen-Kennung konnten Daten geladen werden.",
+    errUnknown: "Unbekannter Fehler."
+  },
+
+  ru: {
+    docTitle: "Wuppertal Verkehr",
+    langLabel: "Язык",
+    refresh: "Обновить",
+
+    searchTitle: "Найти остановку",
+    searchPlaceholder: "Например, Wuppertal Hbf",
+    searchButton: "Найти",
+    filterBus: "Автобусы",
+    filterAll: "Весь транспорт",
+    recent: "НЕДАВНИЕ",
+
+    boardTitle: "Отправления",
+    boardHint: "Найди остановку, чтобы увидеть отправления.",
+    filterDelayed: "Только задержанные",
+    filterAllLines: "Все маршруты",
+    filterLineSel: "Маршрут {line} ×",
+    lineCaption: "ФИЛЬТР ПО МАРШРУТУ",
+
+    footerSource: "Данные: VRR OpenService",
+    footerRefresh: "Автоматическое обновление каждые 30 секунд",
+
+    statusReady: "Готово",
+    statusSearching: "Поиск…",
+    statusFound: "Найдено: {n}",
+    statusUpdating: "Обновление…",
+    statusUpdated: "Обновлено {time}",
+    statusUpdatedPartial: "Обновлено {time} · частично",
+    statusError: "Ошибка",
+
+    idsCount: "Идентификаторов: {n}",
+    searchTooShort: "Введи хотя бы две буквы.",
+    searchNone: "Остановки в Вуппертале не найдены.",
+    searchFailed: "Не удалось выполнить поиск. {reason}",
+
+    loadingBoard: "Загружаю отправления…",
+    departuresFailed: "Не удалось получить отправления. {reason}",
+    retry: "Повторить",
+    noDepartures: "На ближайшее время отправлений не найдено.",
+    noBuses: "Автобусов в ближайшее время нет. Другого транспорта: {n}. Нажми «Весь транспорт».",
+    noDelayed: "Нет отправлений с задержкой от {min} мин. и отменённых рейсов.",
+    noLine: "У маршрута {line} в ближайшее время отправлений нет. Нажми «Все маршруты».",
+
+    countOne: "{n} отправл.",
+    countMany: "{n} отправл.",
+    platform: "Платф. {p}",
+    planned: "План: {time}",
+    cancelled: "Отменён",
+    delay: "+{n} мин. задержка",
+    early: "{n} мин. раньше",
+    onTime: "По расписанию",
+    noRealtime: "Нет данных в реальном времени",
+
+    etaNow: "сейчас",
+    etaMin: "через {n} мин",
+    etaHours: "через {h} ч {m} мин",
+
+    prev: "Назад",
+    next: "Далее",
+
+    sumOnTime: "вовремя: {n}",
+    sumLate: "с задержкой: {n} (макс. +{max} мин)",
+    sumCancelled: "отмен: {n}",
+    dataUntil: "Данные VRR до {time}",
+    singleDirection: "Только одно направление: в окне данных VRR других рейсов маршрута {line} нет.",
+
+    tripTitle: "Следующие остановки",
+    tripCount: "остановок: {n}",
+    tripLoading: "Загружаю остановки…",
+    tripError: "Не удалось загрузить список остановок.",
+    tripEmpty: "VRR не передаёт список остановок для этого рейса.",
+    tripHere: "Вы здесь",
+    tripEnd: "Конечная",
+    tripShowAll: "Показать все остановки ({n})",
+    tripShowLess: "Свернуть",
+
+    errTimeout: "Превышено время ожидания.",
+    errNetwork: "Ошибка сети или CORS.",
+    err_http: "Ошибка VRR (HTTP {code}).",
+    err_json: "VRR вернул некорректные данные.",
+    err_allFailed: "Не удалось получить данные ни по одному ID остановки.",
+    errUnknown: "Неизвестная ошибка."
+  }
+};
+
+// =====================================================
+// SAFE LOCAL STORAGE (can throw in private mode etc.)
+// =====================================================
+
+function storageGet(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function storageSet(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* ignore */ }
+}
 
 // =====================================================
 // TELEGRAM MINI APP
@@ -412,15 +870,71 @@ const $ = id => document.getElementById(id);
 const tg = window.Telegram?.WebApp || null;
 
 if (tg) {
-  tg.ready();
-  tg.expand();
-
   try {
+    tg.ready();
+    tg.expand();
     tg.setHeaderColor("#101827");
     tg.setBackgroundColor("#101827");
   } catch (error) {
-    console.warn("Telegram theme setup:", error);
+    console.warn("Telegram setup:", error);
   }
+}
+
+function haptic() {
+  try { tg?.HapticFeedback?.selectionChanged(); } catch { /* ignore */ }
+}
+
+// =====================================================
+// LANGUAGE
+// =====================================================
+
+let lang = (() => {
+  const saved = storageGet(STORAGE_LANG);
+  return saved === "ru" || saved === "de" ? saved : "de";
+})();
+
+function t(key, vars) {
+  let text = I18N[lang]?.[key] ?? I18N.de[key] ?? key;
+
+  if (vars) {
+    text = text.replace(/\{(\w+)\}/g, (match, name) =>
+      vars[name] !== undefined ? String(vars[name]) : match
+    );
+  }
+
+  return text;
+}
+
+function applyStaticTexts() {
+  document.documentElement.lang = lang;
+  document.title = t("docTitle");
+
+  document.querySelectorAll("[data-i18n]").forEach(node => {
+    node.textContent = t(node.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(node => {
+    node.placeholder = t(node.dataset.i18nPlaceholder);
+  });
+
+  document.querySelectorAll("[data-i18n-aria]").forEach(node => {
+    node.setAttribute("aria-label", t(node.dataset.i18nAria));
+  });
+
+  document.querySelectorAll("#langSwitch button").forEach(button => {
+    const active = button.dataset.lang === lang;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function setLanguage(newLang) {
+  if (newLang === lang || !I18N[newLang]) return;
+
+  lang = newLang;
+  storageSet(STORAGE_LANG, lang);
+  haptic();
+  renderAll();
 }
 
 // =====================================================
@@ -431,6 +945,8 @@ let selectedStop = null;
 let stopGroups = [];
 let allDepartures = [];
 let directionGroups = [];
+let summaryStats = null;
+let dataUntil = null;
 
 let currentPage = 0;
 let transportFilter = "bus";
@@ -438,10 +954,53 @@ let onlyDelayed = false;
 let selectedLine = null;
 
 let refreshTimer = null;
-let loading = false;
+let etaTimer = null;
+let refreshSeq = 0;
 let searchSequence = 0;
 
-const departureCache = new Map();
+let statusState = { key: "statusReady", vars: null };
+let boardMessage = null;     // {key, vars, error, err}
+let searchMessage = null;    // {key, vars, error, err}
+
+let recentStops = loadRecent();
+
+const departureCache = new Map();  // "stationId|std|deep" -> {timestamp, data}
+const tripCache = new Map();       // departure id -> {status, stops, ts}
+const expanded = new Set();        // ids of opened departures
+const showAllStops = new Set();    // ids whose stop list is fully shown
+
+let etaRefs = [];                  // [{el, dep}] for the countdown ticker
+const tripRefs = new Map();        // departure id -> {panel, dep}
+
+// =====================================================
+// ERRORS
+// =====================================================
+
+class AppError extends Error {
+  constructor(kind, vars) {
+    super(kind);
+    this.kind = kind;
+    this.vars = vars || {};
+  }
+}
+
+function explainError(error) {
+  if (error?.name === "AbortError") return t("errTimeout");
+  if (error instanceof AppError) return t("err_" + error.kind, error.vars);
+  if (error instanceof TypeError) return t("errNetwork");
+  return error?.message || t("errUnknown");
+}
+
+// =====================================================
+// SMALL DOM HELPERS
+// =====================================================
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
 
 // =====================================================
 // API HELPERS
@@ -457,10 +1016,7 @@ async function apiRequest(endpoint, params) {
   });
 
   const controller = new AbortController();
-  const timeout = setTimeout(
-    () => controller.abort(),
-    REQUEST_TIMEOUT
-  );
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
   try {
     const response = await fetch(url, {
@@ -470,7 +1026,7 @@ async function apiRequest(endpoint, params) {
     });
 
     if (!response.ok) {
-      throw new Error("VRR HTTP " + response.status);
+      throw new AppError("http", { code: response.status });
     }
 
     const text = await response.text();
@@ -478,12 +1034,52 @@ async function apiRequest(endpoint, params) {
     try {
       return JSON.parse(text);
     } catch {
-      throw new Error("VRR вернул некорректный JSON.");
+      throw new AppError("json");
     }
 
   } finally {
     clearTimeout(timeout);
   }
+}
+
+// EFA expects date/time in the local time of the transport region.
+function berlinDateTimeParams(ms) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date(ms));
+
+  const get = type => parts.find(part => part.type === type)?.value || "00";
+
+  return {
+    itdDate: get("year") + get("month") + get("day"),
+    itdTime: get("hour") + get("minute")
+  };
+}
+
+function dmParams(stationId, startMs, extra) {
+  const params = {
+    outputFormat: "rapidJSON",
+    stateless: "1",
+    type_dm: "any",
+    name_dm: stationId,
+    mode: "direct",
+    useProxFootSearch: "0",
+    useRealtime: "1",
+    limit: String(EVENTS_LIMIT),
+    ...extra
+  };
+
+  if (startMs !== null && startMs !== undefined) {
+    Object.assign(params, berlinDateTimeParams(startMs));
+  }
+
+  return params;
 }
 
 // =====================================================
@@ -493,10 +1089,19 @@ async function apiRequest(endpoint, params) {
 function normalizeName(value) {
   return String(value || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// 'de:05124:5012:0:2' (a platform) -> 'de:05124:5012' (the whole station),
+// so that departures of ALL platforms / both directions are returned.
+function toStationId(id) {
+  const parts = String(id).split(":");
+  return parts[0] === "de" && parts.length > 3
+    ? parts.slice(0, 3).join(":")
+    : String(id);
 }
 
 function getStopId(location) {
@@ -529,6 +1134,59 @@ function getStopName(location) {
   ).toString().trim();
 }
 
+function shortStopName(name) {
+  return String(name).replace(/^Wuppertal,\s*/i, "");
+}
+
+// =====================================================
+// RECENT STOPS
+// =====================================================
+
+function loadRecent() {
+  try {
+    const parsed = JSON.parse(storageGet(STORAGE_RECENT) || "[]");
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter(item =>
+        item &&
+        typeof item.name === "string" &&
+        Array.isArray(item.ids) &&
+        item.ids.length &&
+        item.ids.every(id => typeof id === "string")
+      )
+      .slice(0, MAX_RECENT);
+  } catch {
+    return [];
+  }
+}
+
+function pushRecent(stop) {
+  const key = normalizeName(stop.name);
+
+  recentStops = [
+    { name: stop.name, ids: stop.ids },
+    ...recentStops.filter(item => normalizeName(item.name) !== key)
+  ].slice(0, MAX_RECENT);
+
+  storageSet(STORAGE_RECENT, JSON.stringify(recentStops));
+}
+
+function renderRecent() {
+  const list = $("recentList");
+  list.textContent = "";
+
+  $("recent").hidden = recentStops.length === 0;
+
+  recentStops.forEach(stop => {
+    const chip = el("button", "chip", stop.name);
+    chip.type = "button";
+    chip.addEventListener("click", () => selectStop(stop));
+    list.appendChild(chip);
+  });
+}
+
 // =====================================================
 // STOP SEARCH
 // =====================================================
@@ -537,61 +1195,52 @@ async function searchStops() {
   const rawQuery = $("searchInput").value.trim();
 
   if (rawQuery.length < 2) {
-    showMessage("Введи хотя бы две буквы.");
+    setSearchMessage({ key: "searchTooShort" });
     return;
   }
 
   const sequence = ++searchSequence;
+  const query = rawQuery.slice(0, 60);
 
-  const query = rawQuery.length > 60
-    ? rawQuery.slice(0, 60)
-    : rawQuery;
-
+  // "Albertstrasse" alone may match another city, so always search in Wuppertal.
   const fullQuery = normalizeName(query).includes("wuppertal")
     ? query
     : CITY_NAME + ", " + query;
 
   $("searchButton").disabled = true;
-  $("searchResults").innerHTML = "";
-  setStatus("Поиск...");
+  stopGroups = [];
+  renderStopResults();
+  setSearchMessage(null);
+  setStatus("statusSearching");
 
   try {
-    const data = await apiRequest(
-      "XML_STOPFINDER_REQUEST",
-      {
-        outputFormat: "rapidJSON",
-        locationServerActive: "1",
-        type_sf: "stop",
-        name_sf: fullQuery,
-        anyObjFilter_sf: "2"
-      }
-    );
+    const data = await apiRequest("XML_STOPFINDER_REQUEST", {
+      outputFormat: "rapidJSON",
+      locationServerActive: "1",
+      type_sf: "stop",
+      name_sf: fullQuery,
+      anyObjFilter_sf: "2"
+    });
 
     if (sequence !== searchSequence) return;
 
-    const locations = extractLocations(data);
-    stopGroups = mergeStops(locations);
+    stopGroups = mergeStops(extractLocations(data));
 
     if (!stopGroups.length) {
-      showMessage("Остановки в Вуппертале не найдены.");
-      setStatus("Готово");
+      setSearchMessage({ key: "searchNone" });
+      setStatus("statusReady");
       return;
     }
 
     renderStopResults();
-    setStatus("Найдено: " + stopGroups.length);
+    setStatus("statusFound", { n: stopGroups.length });
 
   } catch (error) {
     if (sequence !== searchSequence) return;
 
     console.error("StopFinder error:", error);
-
-    showMessage(
-      "Не удалось выполнить поиск. " + explainError(error),
-      true
-    );
-
-    setStatus("Ошибка");
+    setSearchMessage({ key: "searchFailed", error: true, err: error });
+    setStatus("statusError");
 
   } finally {
     if (sequence === searchSequence) {
@@ -612,251 +1261,150 @@ function extractLocations(data) {
     for (const item of array) {
       if (item && typeof item === "object") {
         result.push(item);
+
+        // Some answers nest stops inside "assignedStops".
+        addArray(item.assignedStops);
       }
     }
   }
 
   addArray(data?.locations);
   addArray(data?.stopFinder?.points);
+  addArray(data?.stopFinder?.locations);
+  addArray(data?.stopFinder?.assignedStops);
   addArray(data?.points);
   addArray(data?.assignedStops);
-
-  if (data?.stopFinder?.assignedStops) {
-    addArray(data.stopFinder.assignedStops);
-  }
-
-  if (data?.stopFinder?.locations) {
-    addArray(data.stopFinder.locations);
-  }
 
   return result;
 }
 
 function isWuppertalStop(location, id, name) {
-  const lowerName = normalizeName(name);
-
   return (
     String(id).startsWith(CITY_ID_PREFIX) ||
-    lowerName.includes("wuppertal") ||
-    location?.city?.name?.toLowerCase() === "wuppertal"
+    normalizeName(name).includes("wuppertal") ||
+    String(location?.city?.name || "").toLowerCase() === "wuppertal"
   );
 }
 
+// Stops with the same name (usually the two sides of a street) become ONE
+// entry with several station ids; the board loads all of them.
 function mergeStops(locations) {
   const groups = new Map();
 
   for (const location of locations) {
-    const id = getStopId(location);
+    const rawId = getStopId(location);
     const name = getStopName(location);
 
-    if (!id || !name) continue;
-    if (!isWuppertalStop(location, id, name)) continue;
+    if (!rawId || !name) continue;
+    if (!isWuppertalStop(location, rawId, name)) continue;
 
+    const id = toStationId(rawId);
     const key = normalizeName(name);
 
     if (!groups.has(key)) {
-      groups.set(key, {
-        name,
-        ids: [],
-        type: location.type || "stop"
-      });
+      groups.set(key, { name, ids: [] });
     }
 
     const group = groups.get(key);
 
-    if (!group.ids.includes(id)) {
+    if (!group.ids.includes(id) && group.ids.length < MAX_IDS_PER_STOP) {
       group.ids.push(id);
     }
   }
 
-  return [...groups.values()]
-    .sort((a, b) => a.name.localeCompare(b.name, "de"))
-    .slice(0, 10);
+  // Keep the order from VRR: the best match comes first.
+  return [...groups.values()].slice(0, MAX_SEARCH_RESULTS);
 }
 
 function renderStopResults() {
   const container = $("searchResults");
-  container.innerHTML = "";
+  container.textContent = "";
 
-  stopGroups.forEach((stop, index) => {
-    const button = document.createElement("button");
-    button.className = "stop-option";
+  stopGroups.forEach(stop => {
+    const button = el("button", "stop-option");
+    button.type = "button";
 
-    const name = document.createElement("strong");
-    name.textContent = stop.name;
-
-    const details = document.createElement("small");
-    details.textContent =
-      stop.ids.length + " идентификатор(а) остановки";
+    const name = el("strong", "", stop.name);
+    const details = el("small", "", t("idsCount", { n: stop.ids.length }));
 
     button.append(name, details);
-
-    button.addEventListener("click", () => {
-      selectStop(index);
-    });
+    button.addEventListener("click", () => selectStop(stop));
 
     container.appendChild(button);
   });
+}
+
+function setSearchMessage(message) {
+  searchMessage = message;
+  renderSearchMessage();
+}
+
+function renderSearchMessage() {
+  const box = $("searchMessage");
+
+  if (!searchMessage) {
+    box.hidden = true;
+    box.textContent = "";
+    return;
+  }
+
+  box.hidden = false;
+  box.className = searchMessage.error ? "search-message error" : "search-message";
+  box.textContent = resolveMessage(searchMessage);
+}
+
+function resolveMessage(message) {
+  return t(message.key, {
+    ...(message.vars || {}),
+    reason: message.err ? explainError(message.err) : ""
+  }).trim();
 }
 
 // =====================================================
 // SELECT STOP
 // =====================================================
 
-async function selectStop(index) {
-  const stop = stopGroups[index];
+function clearDepartureCacheFor(ids) {
+  for (const key of [...departureCache.keys()]) {
+    if (ids.some(id => key.startsWith(id + "|"))) {
+      departureCache.delete(key);
+    }
+  }
+}
 
-  if (!stop) return;
+async function selectStop(stop) {
+  if (!stop?.ids?.length) return;
 
-  selectedStop = stop;
+  selectedStop = { name: stop.name, ids: [...stop.ids] };
   currentPage = 0;
   selectedLine = null;
   onlyDelayed = false;
 
-  $("selectedStop").textContent = stop.name;
-  $("searchResults").innerHTML = "";
+  allDepartures = [];
+  directionGroups = [];
+  summaryStats = null;
+  dataUntil = null;
 
+  expanded.clear();
+  showAllStops.clear();
+  tripCache.clear();
+  clearDepartureCacheFor(selectedStop.ids);
+
+  stopGroups = [];
+  renderStopResults();
+  setSearchMessage(null);
+
+  pushRecent(selectedStop);
+  renderRecent();
+
+  renderBoardTitle();
   updateFilterButtons();
   renderLineFilters();
+  showMessage({ key: "loadingBoard" });
 
-  stop.ids.forEach(id => {
-    if (!departureCache.has(id)) {
-      departureCache.delete(id);
-    }
-  });
-
-  await refreshDepartures();
+  haptic();
   startAutoRefresh();
-}
-
-// =====================================================
-// DEPARTURE REQUESTS
-// =====================================================
-
-async function fetchStopEvents(stationId) {
-  const cached = departureCache.get(stationId);
-
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
-
-  const data = await apiRequest(
-    "XML_DM_REQUEST",
-    {
-      outputFormat: "rapidJSON",
-      stateless: "1",
-      type_dm: "any",
-      name_dm: stationId,
-      mode: "direct",
-      useProxFootSearch: "0",
-      useRealtime: "1",
-      limit: "80"
-    }
-  );
-
-  departureCache.set(stationId, {
-    timestamp: Date.now(),
-    data
-  });
-
-  return data;
-}
-
-async function refreshDepartures() {
-  if (!selectedStop || loading) return;
-
-  loading = true;
-  setStatus("Обновление...");
-  $("refreshButton").disabled = true;
-
-  const stopAtRequestStart = selectedStop;
-
-  try {
-    const requests = stopAtRequestStart.ids.map(async id => {
-      try {
-        return await fetchStopEvents(id);
-      } catch (error) {
-        console.error("Departure request failed:", id, error);
-        return null;
-      }
-    });
-
-    const responses = await Promise.all(requests);
-
-    if (selectedStop !== stopAtRequestStart) return;
-
-    const successfulResponses = responses.filter(Boolean);
-
-    if (!successfulResponses.length) {
-      throw new Error("Не удалось получить данные ни с одного ID остановки.");
-    }
-
-    let rawDepartures = [];
-
-    for (const response of successfulResponses) {
-      rawDepartures.push(...extractDepartures(response));
-    }
-
-    allDepartures = deduplicateDepartures(rawDepartures)
-      .filter(isFutureDeparture)
-      .sort((a, b) => a.timestamp - b.timestamp);
-
-    buildDirectionGroups();
-
-    const totalPages = Math.ceil(directionGroups.length / PAGE_SIZE);
-
-    currentPage = Math.min(
-      currentPage,
-      Math.max(0, totalPages - 1)
-    );
-
-    renderLineFilters();
-    renderBoard();
-
-    const time = new Date().toLocaleTimeString("de-DE", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-
-    setStatus(
-      "Обновлено " + time +
-      (successfulResponses.length < stopAtRequestStart.ids.length
-        ? " · частично"
-        : "")
-    );
-
-  } catch (error) {
-    console.error("Departure error:", error);
-
-    showMessage(
-      "Не удалось получить отправления. " + explainError(error),
-      true
-    );
-
-    setStatus("Ошибка");
-
-  } finally {
-    loading = false;
-    $("refreshButton").disabled = false;
-  }
-}
-
-function extractDepartures(data) {
-  const result = [];
-
-  if (Array.isArray(data?.departureList)) {
-    result.push(...data.departureList);
-  }
-
-  if (Array.isArray(data?.stopEvents)) {
-    result.push(...data.stopEvents);
-  }
-
-  if (Array.isArray(data?.departures)) {
-    result.push(...data.departures);
-  }
-
-  return result;
+  await refreshDepartures();
 }
 
 // =====================================================
@@ -922,35 +1470,53 @@ function parseDate(value) {
       return new Date(year, month - 1, day, hour, minute, second);
     }
 
-    if (value.timestamp) {
-      return parseDate(value.timestamp);
-    }
-
-    if (value.dateTime) {
-      return parseDate(value.dateTime);
-    }
+    if (value.timestamp) return parseDate(value.timestamp);
+    if (value.dateTime) return parseDate(value.dateTime);
   }
 
   return null;
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Berlin"
+  });
 }
 
 // =====================================================
 // DEPARTURE PARSING
 // =====================================================
 
+function extractDepartures(data) {
+  const result = [];
+
+  if (Array.isArray(data?.departureList)) result.push(...data.departureList);
+  if (Array.isArray(data?.stopEvents)) result.push(...data.stopEvents);
+  if (Array.isArray(data?.departures)) result.push(...data.departures);
+
+  return result;
+}
+
 function getProductText(transport, servingLine) {
   const product = transport?.product || servingLine?.product;
 
+  let text;
+
   if (typeof product === "string" || typeof product === "number") {
-    return String(product);
+    text = String(product);
+  } else {
+    text = String(
+      product?.name ||
+      product?.description ||
+      product?.shortName ||
+      ""
+    );
   }
 
-  return String(
-    product?.name ||
-    product?.description ||
-    product?.shortName ||
-    ""
-  );
+  // "Bus 628" in the transport name is a good hint when no product is given.
+  return (text + " " + String(transport?.name || "")).trim();
 }
 
 function getProductClass(transport, servingLine) {
@@ -964,46 +1530,39 @@ function getProductClass(transport, servingLine) {
   ];
 
   for (const value of candidates) {
+    if (value === null || value === undefined || value === "") continue;
+
     const number = Number(value);
 
-    if (Number.isFinite(number)) {
-      return number;
-    }
+    if (Number.isFinite(number)) return number;
   }
 
   return null;
 }
 
 function isCancelledItem(item) {
-  const candidates = [
+  const flags = [
     item?.isCancelled,
     item?.cancelled,
     item?.isCanceled,
     item?.canceled,
-    item?.cancelledTrip,
-    item?.realtimeStatus
+    item?.cancelledTrip
   ];
 
-  for (const value of candidates) {
-    if (value === true || value === 1) return true;
-
-    if (typeof value === "string") {
-      const normalized = value.toLowerCase();
-
-      if (
-        normalized.includes("cancel") ||
-        normalized.includes("ausfall") ||
-        normalized === "true"
-      ) {
-        return true;
-      }
-    }
+  if (flags.some(value => value === true || value === 1 || value === "true")) {
+    return true;
   }
 
-  return false;
+  // realtimeStatus is an ARRAY in rapidJSON (e.g. ["MONITORED", "TRIP_CANCELLED"]).
+  const status = item?.realtimeStatus;
+  const list = Array.isArray(status) ? status : [status];
+
+  return list.some(value =>
+    typeof value === "string" && /cancel|ausfall/i.test(value)
+  );
 }
 
-function parseDeparture(item) {
+function parseDeparture(item, stationId) {
   const transport = item?.transportation || {};
   const servingLine = item?.servingLine || {};
 
@@ -1015,11 +1574,12 @@ function parseDeparture(item) {
 
   if (!planned) return null;
 
-  const estimated =
+  const estimatedRaw =
     parseDate(item?.departureTimeEstimated) ||
     parseDate(item?.realDateTime) ||
-    parseDate(item?.estimatedDateTime) ||
-    planned;
+    parseDate(item?.estimatedDateTime);
+
+  const estimated = estimatedRaw || planned;
 
   const destinationValue =
     transport?.destination?.name ||
@@ -1028,7 +1588,7 @@ function parseDeparture(item) {
     item?.direction ||
     item?.destination?.name ||
     item?.destination ||
-    "Направление не указано";
+    "—";
 
   const number =
     servingLine?.number ||
@@ -1038,7 +1598,7 @@ function parseDeparture(item) {
     transport?.name ||
     "?";
 
-  const platform =
+  const platformValue =
     item?.location?.properties?.platformName ||
     item?.platformName ||
     item?.platform?.name ||
@@ -1046,52 +1606,48 @@ function parseDeparture(item) {
     item?.stop?.platformName ||
     "";
 
-  const delay = Math.round(
-    (estimated.getTime() - planned.getTime()) / 60000
-  );
+  const line = String(number).trim();
+  const destination = String(destinationValue).trim();
 
-  const productText = getProductText(transport, servingLine);
-  const productClass = getProductClass(transport, servingLine);
-
-  return {
-    line: String(number).trim(),
-    destination: String(destinationValue).trim(),
-    platform: typeof platform === "object"
-      ? String(platform.name || platform.number || "")
-      : String(platform),
-    product: productText,
-    productClass,
+  const departure = {
+    stationId: stationId || "",
+    line,
+    destination,
+    platform: typeof platformValue === "object"
+      ? String(platformValue.name || platformValue.number || "")
+      : String(platformValue),
+    product: getProductText(transport, servingLine),
+    productClass: getProductClass(transport, servingLine),
     planned,
     estimated,
     timestamp: estimated.getTime(),
     plannedTimestamp: planned.getTime(),
-    delay,
+    hasRealtime: Boolean(estimatedRaw),
+    delay: estimatedRaw
+      ? Math.round((estimatedRaw.getTime() - planned.getTime()) / 60000)
+      : 0,
     cancelled: isCancelledItem(item),
-    isBus: null
+    isBus: false,
+    id: ""
   };
+
+  departure.isBus = classifyBus(departure);
+  departure.id = [
+    departure.stationId,
+    line,
+    departure.plannedTimestamp,
+    normalizeName(destination)
+  ].join("|");
+
+  return departure;
 }
 
 function classifyBus(departure) {
-  if (BUS_CLASSES.has(departure.productClass)) {
-    return true;
-  }
+  if (BUS_CLASSES.has(departure.productClass)) return true;
+  if (departure.productClass !== null) return false;
 
-  if (departure.productClass !== null) {
-    return false;
-  }
-
-  const product = normalizeName(departure.product);
-
-  if (/bus|busse|expressbus|nachtbus/.test(product)) {
-    return true;
-  }
-
-  if (product) {
-    return false;
-  }
-
-  // Если VRR не сообщил тип транспорта, не угадываем его.
-  return false;
+  // No class given: decide by the product / transport name.
+  return /bus/.test(normalizeName(departure.product));
 }
 
 function isFutureDeparture(item) {
@@ -1101,13 +1657,7 @@ function isFutureDeparture(item) {
 function deduplicateDepartures(items) {
   const unique = new Map();
 
-  for (const raw of items) {
-    const item = parseDeparture(raw);
-
-    if (!item) continue;
-
-    item.isBus = classifyBus(item);
-
+  for (const item of items) {
     const key = [
       item.line,
       normalizeName(item.destination),
@@ -1117,19 +1667,387 @@ function deduplicateDepartures(items) {
       item.cancelled
     ].join("|");
 
-    if (!unique.has(key)) {
-      unique.set(key, item);
-    } else {
-      // Если один из дублей содержит платформу, сохраняем её.
-      const existing = unique.get(key);
+    const existing = unique.get(key);
 
-      if (!existing.platform && item.platform) {
-        existing.platform = item.platform;
-      }
+    if (!existing) {
+      unique.set(key, item);
+    } else if (!existing.platform && item.platform) {
+      existing.platform = item.platform;
     }
   }
 
   return [...unique.values()];
+}
+
+// =====================================================
+// DEPARTURE REQUESTS
+// =====================================================
+
+// Departures of ONE station id.
+// deep = false: one request (next N events).
+// deep = true : several requests, each starting where the previous one ended,
+//               until DEEP_HORIZON_MIN minutes are covered. EFA returns only
+//               the next N events, so at a busy hub a rare line could
+//               otherwise show up in one direction only.
+async function fetchStationDepartures(stationId, deep) {
+  const cacheKey = stationId + "|" + (deep ? "deep" : "std");
+  const cached = departureCache.get(cacheKey);
+
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+
+  const collected = new Map();
+  const horizonEnd = Date.now() + DEEP_HORIZON_MIN * 60000;
+  let start = null;
+
+  const pages = deep ? DEEP_MAX_PAGES : 1;
+
+  for (let page = 0; page < pages; page++) {
+    let data;
+
+    try {
+      data = await apiRequest("XML_DM_REQUEST", dmParams(stationId, start));
+    } catch (error) {
+      if (page === 0) throw error;   // nothing at all -> report the error
+      break;                         // a later page failed -> keep what we have
+    }
+
+    const parsed = extractDepartures(data)
+      .map(raw => parseDeparture(raw, stationId))
+      .filter(Boolean);
+
+    parsed.forEach(dep => {
+      if (!collected.has(dep.id)) collected.set(dep.id, dep);
+    });
+
+    if (!parsed.length) break;
+
+    const last = Math.max(...parsed.map(dep => dep.timestamp));
+
+    // Stop when the horizon is covered or the window did not move forward.
+    if (last >= horizonEnd || (start !== null && last <= start)) break;
+
+    start = last;
+  }
+
+  const result = [...collected.values()];
+
+  departureCache.set(cacheKey, { timestamp: Date.now(), data: result });
+
+  return result;
+}
+
+async function refreshDepartures() {
+  if (!selectedStop) return;
+
+  const stop = selectedStop;
+  const seq = ++refreshSeq;
+  const deep = Boolean(selectedLine);
+
+  setLoading(true);
+  setStatus("statusUpdating");
+
+  try {
+    const results = await Promise.all(
+      stop.ids.map(id =>
+        fetchStationDepartures(id, deep).catch(error => {
+          console.error("Departure request failed:", id, error);
+          return null;
+        })
+      )
+    );
+
+    // A newer refresh or another stop replaced this one: drop the result.
+    if (seq !== refreshSeq || stop !== selectedStop) return;
+
+    const successful = results.filter(Boolean);
+
+    if (!successful.length) {
+      throw new AppError("allFailed");
+    }
+
+    const received = successful.flat();
+
+    dataUntil = received.length
+      ? Math.max(...received.map(dep => dep.timestamp))
+      : null;
+
+    allDepartures = deduplicateDepartures(received)
+      .filter(isFutureDeparture)
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    // Forget opened departures that have already left.
+    const alive = new Set(allDepartures.map(dep => dep.id));
+    [...expanded].forEach(id => { if (!alive.has(id)) expanded.delete(id); });
+
+    boardMessage = null;
+    buildDirectionGroups();
+    renderLineFilters();
+    renderBoard();
+
+    const time = new Date().toLocaleTimeString("de-DE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    setStatus(
+      successful.length < stop.ids.length ? "statusUpdatedPartial" : "statusUpdated",
+      { time }
+    );
+
+    refreshOpenTrips();
+
+  } catch (error) {
+    if (seq !== refreshSeq || stop !== selectedStop) return;
+
+    console.error("Departure error:", error);
+    setStatus("statusError");
+
+    // Keep showing the old data if we have it; otherwise show the error.
+    if (!allDepartures.length) {
+      showMessage({ key: "departuresFailed", error: true, err: error });
+    }
+
+  } finally {
+    if (seq === refreshSeq) setLoading(false);
+  }
+}
+
+// =====================================================
+// STOP SEQUENCE OF A TRIP ("next stops")
+// =====================================================
+
+function onwardFromRaw(raw) {
+  const list = raw?.onwardLocations;
+
+  if (!Array.isArray(list)) return [];
+
+  return list
+    .map(location => {
+      const name =
+        location?.parent?.name ||
+        location?.name ||
+        location?.disassembledName ||
+        "";
+
+      if (!name) return null;
+
+      const planned = parseDate(
+        location?.arrivalTimePlanned || location?.departureTimePlanned
+      );
+      const estimatedRaw = parseDate(
+        location?.arrivalTimeEstimated || location?.departureTimeEstimated
+      );
+
+      return {
+        name: String(name),
+        planned,
+        estimated: estimatedRaw || planned,
+        delay: planned && estimatedRaw
+          ? Math.round((estimatedRaw.getTime() - planned.getTime()) / 60000)
+          : 0
+      };
+    })
+    .filter(Boolean);
+}
+
+// There is no "get trip by id" call in the departure monitor, so we ask for
+// the events around the departure time WITH the complete stop sequence and
+// pick the matching trip out of them.
+async function fetchTripStops(dep) {
+  const start = dep.plannedTimestamp - 120000;
+
+  const extra = {
+    limit: String(TRIP_EVENTS_LIMIT),
+    includeCompleteStopSeq: "1"
+  };
+
+  let data;
+
+  try {
+    data = await apiRequest(
+      "XML_DM_REQUEST",
+      dmParams(dep.stationId, start, { ...extra, depType: "stopEvents" })
+    );
+  } catch {
+    // Retry without depType in case the proxy/server dislikes it.
+    data = await apiRequest("XML_DM_REQUEST", dmParams(dep.stationId, start, extra));
+  }
+
+  const wantedDestination = normalizeName(dep.destination);
+
+  const candidates = extractDepartures(data)
+    .map(raw => ({ raw, parsed: parseDeparture(raw, dep.stationId) }))
+    .filter(item => item.parsed && item.parsed.line === dep.line)
+    .filter(item => normalizeName(item.parsed.destination) === wantedDestination);
+
+  const match =
+    candidates.find(item => item.parsed.plannedTimestamp === dep.plannedTimestamp) ||
+    candidates.find(item =>
+      Math.abs(item.parsed.plannedTimestamp - dep.plannedTimestamp) <= 120000
+    );
+
+  if (!match) return [];
+
+  const stops = onwardFromRaw(match.raw);
+
+  if (!stops.length) {
+    console.warn("VRR returned no onwardLocations. Fields:", Object.keys(match.raw));
+  }
+
+  return stops;
+}
+
+async function loadTrip(dep, force = false) {
+  const previous = tripCache.get(dep.id);
+
+  if (previous?.status === "loading") return;
+
+  if (!force && previous?.status === "ok" && Date.now() - previous.ts < TRIP_TTL) {
+    return;
+  }
+
+  tripCache.set(dep.id, {
+    status: "loading",
+    stops: previous?.stops || [],
+    ts: previous?.ts || 0
+  });
+  updateTripPanel(dep.id);
+
+  try {
+    const stops = await fetchTripStops(dep);
+
+    tripCache.set(dep.id, {
+      status: stops.length ? "ok" : "empty",
+      stops,
+      ts: Date.now()
+    });
+
+  } catch (error) {
+    console.error("Trip request failed:", dep.id, error);
+
+    tripCache.set(dep.id, {
+      status: "error",
+      stops: previous?.stops || [],
+      ts: Date.now()
+    });
+  }
+
+  updateTripPanel(dep.id);
+}
+
+function refreshOpenTrips() {
+  for (const { dep } of tripRefs.values()) {
+    if (expanded.has(dep.id)) loadTrip(dep);
+  }
+}
+
+function updateTripPanel(id) {
+  const ref = tripRefs.get(id);
+
+  if (ref) renderTripPanel(ref.panel, ref.dep);
+}
+
+function renderTripPanel(panel, dep) {
+  panel.textContent = "";
+
+  const state = tripCache.get(dep.id);
+  const stops = state?.stops || [];
+
+  const title = el("div", "stops-title");
+  title.appendChild(el("span", "", t("tripTitle")));
+
+  if (stops.length) {
+    title.appendChild(el("small", "", t("tripCount", { n: stops.length })));
+  }
+
+  panel.appendChild(title);
+
+  if (!state || (state.status === "loading" && !stops.length)) {
+    const note = el("div", "stops-note");
+    note.append(el("span", "spinner"), el("span", "", t("tripLoading")));
+    panel.appendChild(note);
+    return;
+  }
+
+  if (state.status === "error" && !stops.length) {
+    const note = el("div", "stops-note error");
+    note.appendChild(el("span", "", t("tripError")));
+
+    const retry = el("button", "secondary", t("retry"));
+    retry.type = "button";
+    retry.addEventListener("click", event => {
+      event.stopPropagation();
+      loadTrip(dep, true);
+    });
+
+    note.appendChild(retry);
+    panel.appendChild(note);
+    return;
+  }
+
+  if (!stops.length) {
+    panel.appendChild(el("div", "stops-note", t("tripEmpty")));
+    return;
+  }
+
+  const fullList = showAllStops.has(dep.id);
+  const visible = fullList ? stops : stops.slice(0, TRIP_PREVIEW_COUNT);
+
+  const list = el("ul", "stop-list");
+
+  // First row: where the passenger is right now.
+  const here = el("li", "here");
+  const hereName = el("span", "stop-name", selectedStop ? selectedStop.name : "");
+  hereName.appendChild(el("small", "", t("tripHere")));
+  here.append(hereName, el("span", "stop-time", formatTime(dep.estimated)));
+  list.appendChild(here);
+
+  visible.forEach((stop, index) => {
+    const isLast = fullList && index === visible.length - 1;
+
+    const item = el("li", isLast ? "end" : "");
+    const name = el("span", "stop-name", shortStopName(stop.name));
+
+    if (isLast) name.appendChild(el("small", "", t("tripEnd")));
+
+    const time = el(
+      "span",
+      "stop-time",
+      stop.estimated ? formatTime(stop.estimated) : "--:--"
+    );
+
+    if (stop.delay >= 1) {
+      time.appendChild(
+        el("small", stop.delay >= MAJOR_DELAY_MIN ? "bad" : "late", "+" + stop.delay)
+      );
+    }
+
+    item.append(name, time);
+    list.appendChild(item);
+  });
+
+  panel.appendChild(list);
+
+  if (stops.length > TRIP_PREVIEW_COUNT) {
+    const toggle = el(
+      "button",
+      "secondary stops-toggle",
+      fullList ? t("tripShowLess") : t("tripShowAll", { n: stops.length })
+    );
+    toggle.type = "button";
+    toggle.addEventListener("click", event => {
+      event.stopPropagation();
+
+      if (showAllStops.has(dep.id)) showAllStops.delete(dep.id);
+      else showAllStops.add(dep.id);
+
+      renderTripPanel(panel, dep);
+    });
+
+    panel.appendChild(toggle);
+  }
 }
 
 // =====================================================
@@ -1144,7 +2062,7 @@ function getFilteredDepartures() {
   }
 
   if (onlyDelayed) {
-    result = result.filter(item => item.cancelled || item.delay >= 3);
+    result = result.filter(item => item.cancelled || item.delay >= DELAYED_MIN);
   }
 
   if (selectedLine) {
@@ -1158,17 +2076,23 @@ function buildDirectionGroups() {
   const departures = getFilteredDepartures();
   const groups = new Map();
 
+  // One card per direction: destination + platform (the two sides of a
+  // street have different platforms even if the destination text is similar).
   for (const departure of departures) {
-    const key = normalizeName(departure.destination);
+    const key = normalizeName(departure.destination) + "|" + departure.platform;
 
     if (!groups.has(key)) {
       groups.set(key, {
         destination: departure.destination,
+        platform: departure.platform,
+        total: 0,
         departures: []
       });
     }
 
-    groups.get(key).departures.push(departure);
+    const group = groups.get(key);
+    group.total++;
+    group.departures.push(departure);
   }
 
   const perDirection = selectedLine
@@ -1188,6 +2112,22 @@ function buildDirectionGroups() {
 
       return timeA - timeB;
     });
+
+  // Delay statistics over everything that matches the filters.
+  const active = departures.filter(item => !item.cancelled);
+  const late = active.filter(item => item.delay >= 1);
+
+  summaryStats = departures.length
+    ? {
+        onTime: active.filter(item => item.hasRealtime && item.delay <= 0).length,
+        late: late.length,
+        maxLate: late.reduce((max, item) => Math.max(max, item.delay), 0),
+        cancelled: departures.length - active.length
+      }
+    : null;
+
+  const totalPages = Math.max(1, Math.ceil(directionGroups.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages - 1);
 }
 
 // =====================================================
@@ -1198,42 +2138,35 @@ function renderLineFilters() {
   const container = $("lineFilters");
   const caption = $("lineCaption");
 
-  container.innerHTML = "";
+  container.textContent = "";
 
-  const departures = allDepartures.filter(item => {
-    return transportFilter === "all" || item.isBus;
-  });
+  const departures = allDepartures.filter(item =>
+    transportFilter === "all" || item.isBus
+  );
 
-  const lines = [...new Set(
-    departures.map(item => item.line).filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b, "de", {
-    numeric: true
-  }));
+  const lineSet = new Set(departures.map(item => item.line).filter(Boolean));
+
+  // The selected line stays visible even if it has no departures right now.
+  if (selectedLine) lineSet.add(selectedLine);
+
+  const lines = [...lineSet].sort((a, b) =>
+    a.localeCompare(b, "de", { numeric: true })
+  );
 
   caption.hidden = lines.length === 0;
 
-  const visibleLines = lines.slice(0, MAX_LINE_BUTTONS);
-
-  visibleLines.forEach(lineNumber => {
-    const button = document.createElement("button");
-    button.className = "line-button";
+  lines.slice(0, MAX_LINE_BUTTONS).forEach(lineNumber => {
+    const button = el("button", "line-button", lineNumber);
+    button.type = "button";
 
     if (selectedLine === lineNumber) {
       button.classList.add("active");
     }
 
-    button.textContent = lineNumber;
-
     button.addEventListener("click", () => {
-      selectedLine = selectedLine === lineNumber
-        ? null
-        : lineNumber;
-
-      currentPage = 0;
-      updateFilterButtons();
-      renderLineFilters();
-      buildDirectionGroups();
-      renderBoard();
+      haptic();
+      selectedLine = selectedLine === lineNumber ? null : lineNumber;
+      onFilterChanged({ reload: true });
     });
 
     container.appendChild(button);
@@ -1241,185 +2174,370 @@ function renderLineFilters() {
 }
 
 function updateFilterButtons() {
-  $("busFilter").className =
-    transportFilter === "bus" ? "active" : "secondary";
+  $("busFilter").className = transportFilter === "bus" ? "active" : "secondary";
+  $("allFilter").className = transportFilter === "all" ? "active" : "secondary";
+  $("delayedFilter").className = onlyDelayed ? "active" : "secondary";
+  $("allLinesFilter").className = selectedLine ? "active" : "secondary";
 
-  $("allFilter").className =
-    transportFilter === "all" ? "active" : "secondary";
+  $("delayedFilter").textContent = t("filterDelayed");
+  $("allLinesFilter").textContent = selectedLine
+    ? t("filterLineSel", { line: selectedLine })
+    : t("filterAllLines");
 
-  $("delayedFilter").className =
-    onlyDelayed ? "active" : "secondary";
+  $("busFilter").setAttribute("aria-pressed", String(transportFilter === "bus"));
+  $("allFilter").setAttribute("aria-pressed", String(transportFilter === "all"));
+  $("delayedFilter").setAttribute("aria-pressed", String(onlyDelayed));
+}
 
-  $("allLinesFilter").className =
-    selectedLine ? "active" : "secondary";
+// Re-applies the filters. With reload = true the data is fetched again,
+// because a selected line is loaded further ahead in time (deep mode).
+function onFilterChanged({ reload = false } = {}) {
+  currentPage = 0;
 
-  $("allLinesFilter").textContent =
-    selectedLine ? "Маршрут " + selectedLine + " ×" : "Все маршруты";
+  updateFilterButtons();
+  renderLineFilters();
+
+  if (selectedStop && !boardMessage) {
+    buildDirectionGroups();
+  }
+
+  renderBoard();
+
+  if (reload && selectedStop) refreshDepartures();
 }
 
 // =====================================================
 // RENDER BOARD
 // =====================================================
 
-function renderBoard() {
-  const container = $("board");
-  container.innerHTML = "";
+function emptyMessage() {
+  if (onlyDelayed) {
+    return { key: "noDelayed", vars: { min: DELAYED_MIN } };
+  }
 
-  if (!directionGroups.length) {
-    showMessage(
-      onlyDelayed
-        ? "Задержанных отправлений от 3 минут или отменённых рейсов нет."
-        : "На ближайшее время отправлений не найдено."
-    );
+  if (selectedLine) {
+    return { key: "noLine", vars: { line: selectedLine } };
+  }
 
-    $("pagination").hidden = true;
+  if (transportFilter === "bus" && allDepartures.length) {
+    return { key: "noBuses", vars: { n: allDepartures.length } };
+  }
+
+  return { key: "noDepartures" };
+}
+
+function renderMessage(container, message) {
+  const box = el("div", message.error ? "message error" : "message");
+  box.textContent = resolveMessage(message);
+
+  if (message.error && selectedStop) {
+    const retry = el("button", "secondary", t("retry"));
+    retry.type = "button";
+    retry.addEventListener("click", () => refreshDepartures());
+
+    box.append(document.createElement("br"), retry);
+  }
+
+  container.appendChild(box);
+}
+
+function showMessage(message) {
+  boardMessage = message;
+  renderBoard();
+}
+
+function countText(n) {
+  return t(n === 1 ? "countOne" : "countMany", { n });
+}
+
+function renderSummary() {
+  const box = $("summary");
+  box.textContent = "";
+
+  if (!summaryStats) {
+    box.hidden = true;
     return;
   }
 
-  const totalPages = Math.ceil(
-    directionGroups.length / PAGE_SIZE
-  );
+  const { onTime, late, maxLate, cancelled } = summaryStats;
 
+  box.appendChild(el("span", "ok", t("sumOnTime", { n: onTime })));
+
+  if (late) {
+    box.appendChild(el(
+      "span",
+      maxLate >= MAJOR_DELAY_MIN ? "bad" : "late",
+      t("sumLate", { n: late, max: maxLate })
+    ));
+  }
+
+  if (cancelled) {
+    box.appendChild(el("span", "bad", t("sumCancelled", { n: cancelled })));
+  }
+
+  box.hidden = false;
+}
+
+function renderDataNote(showDirectionHint) {
+  const box = $("dataNote");
+  box.textContent = "";
+
+  const lines = [];
+
+  if (dataUntil) {
+    lines.push(t("dataUntil", { time: formatTime(new Date(dataUntil)) }));
+  }
+
+  if (showDirectionHint) {
+    lines.push(t("singleDirection", { line: selectedLine }));
+  }
+
+  lines.forEach((text, index) => {
+    if (index) box.appendChild(document.createElement("br"));
+    box.appendChild(document.createTextNode(text));
+  });
+
+  box.hidden = lines.length === 0;
+}
+
+function etaText(dep) {
+  const minutes = Math.floor((dep.timestamp - Date.now()) / 60000);
+
+  if (minutes <= 0) return t("etaNow");
+
+  if (minutes >= 60) {
+    return t("etaHours", {
+      h: Math.floor(minutes / 60),
+      m: String(minutes % 60).padStart(2, "0")
+    });
+  }
+
+  return t("etaMin", { n: minutes });
+}
+
+function renderStatusLine(dep) {
+  if (dep.cancelled) return el("div", "cancelled", t("cancelled"));
+  if (!dep.hasRealtime) return el("div", "no-rt", t("noRealtime"));
+
+  if (dep.delay >= MAJOR_DELAY_MIN) {
+    return el("div", "delay", t("delay", { n: dep.delay }));
+  }
+
+  if (dep.delay >= 1) {
+    return el("div", "delay-minor", t("delay", { n: dep.delay }));
+  }
+
+  if (dep.delay <= -1) {
+    return el("div", "early", t("early", { n: Math.abs(dep.delay) }));
+  }
+
+  return el("div", "on-time", t("onTime"));
+}
+
+function renderDeparture(dep) {
+  const wrap = el("div", "dep-wrap");
+
+  const row = el("div", "departure");
+  row.tabIndex = 0;
+  row.setAttribute("role", "button");
+
+  const panel = el("div", "stops-panel");
+  panel.hidden = !expanded.has(dep.id);
+
+  row.setAttribute("aria-expanded", String(expanded.has(dep.id)));
+
+  const line = el("div", "line", dep.line);
+
+  const info = el("div");
+
+  const timeRow = el("div", "time-row");
+  const time = el(
+    "span",
+    dep.cancelled ? "time struck" : "time",
+    formatTime(dep.estimated)
+  );
+  timeRow.appendChild(time);
+
+  if (!dep.cancelled) {
+    const eta = el("span", "eta", etaText(dep));
+    timeRow.appendChild(eta);
+    etaRefs.push({ el: eta, dep });
+  }
+
+  const planned = el("div", "destination", t("planned", { time: formatTime(dep.planned) }));
+
+  info.append(timeRow, planned, renderStatusLine(dep));
+
+  const chevron = el("div", "chev", "▾");
+  chevron.setAttribute("aria-hidden", "true");
+
+  row.append(line, info, chevron);
+  wrap.append(row, panel);
+
+  tripRefs.set(dep.id, { panel, dep });
+
+  if (expanded.has(dep.id)) {
+    renderTripPanel(panel, dep);
+  }
+
+  const toggle = () => {
+    haptic();
+
+    if (expanded.has(dep.id)) {
+      expanded.delete(dep.id);
+    } else {
+      expanded.add(dep.id);
+      renderTripPanel(panel, dep);
+      loadTrip(dep);
+    }
+
+    const open = expanded.has(dep.id);
+    row.setAttribute("aria-expanded", String(open));
+    panel.hidden = !open;
+  };
+
+  row.addEventListener("click", toggle);
+  row.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggle();
+    }
+  });
+
+  return wrap;
+}
+
+function renderBoard() {
+  const container = $("board");
+  container.textContent = "";
+
+  etaRefs = [];
+  tripRefs.clear();
+
+  $("summary").hidden = true;
+  $("pagination").hidden = true;
+  $("dataNote").hidden = true;
+
+  if (boardMessage) {
+    renderMessage(container, boardMessage);
+    return;
+  }
+
+  if (!selectedStop) {
+    renderMessage(container, { key: "boardHint" });
+    return;
+  }
+
+  if (!directionGroups.length) {
+    renderMessage(container, emptyMessage());
+    renderDataNote(false);
+    return;
+  }
+
+  const totalPages = Math.ceil(directionGroups.length / PAGE_SIZE);
   currentPage = Math.min(currentPage, totalPages - 1);
 
   const start = currentPage * PAGE_SIZE;
+  const pageGroups = directionGroups.slice(start, start + PAGE_SIZE);
 
-  const pageGroups = directionGroups.slice(
-    start,
-    start + PAGE_SIZE
-  );
+  renderSummary();
 
   pageGroups.forEach(group => {
-    const card = document.createElement("div");
-    card.className = "direction";
+    const card = el("div", "direction");
 
-    const title = document.createElement("div");
-    title.className = "direction-title";
+    const title = el("div", "direction-title");
+    title.appendChild(el("span", "", group.destination));
 
-    const destination = document.createElement("span");
-    destination.textContent = group.destination;
+    const meta = group.platform
+      ? t("platform", { p: group.platform }) + " · " + countText(group.total)
+      : countText(group.total);
 
-    const count = document.createElement("small");
-    count.textContent = group.departures.length + " отправ.";
-
-    title.append(destination, count);
+    title.appendChild(el("small", "", meta));
     card.appendChild(title);
 
-    group.departures.forEach(dep => {
-      const row = document.createElement("div");
-      row.className = "departure";
-
-      const line = document.createElement("div");
-      line.className = "line";
-      line.textContent = dep.line;
-
-      const info = document.createElement("div");
-
-      const time = document.createElement("div");
-      time.className = "time";
-      time.textContent = formatTime(dep.estimated);
-
-      const detail = document.createElement("div");
-      detail.className = "destination";
-      detail.textContent =
-        "План: " + formatTime(dep.planned);
-
-      const status = document.createElement("div");
-
-      if (dep.cancelled) {
-        status.className = "cancelled";
-        status.textContent = "Отменён";
-      } else if (dep.delay >= 1) {
-        status.className = "delay";
-        status.textContent = "+" + dep.delay + " мин. задержка";
-      } else if (dep.delay <= -1) {
-        status.className = "early";
-        status.textContent = Math.abs(dep.delay) + " мин. раньше";
-      } else {
-        status.className = "on-time";
-        status.textContent = "По расписанию";
-      }
-
-      info.append(time, detail, status);
-
-      const platform = document.createElement("div");
-      platform.className = "platform";
-      platform.textContent = dep.platform
-        ? "Платф. " + dep.platform
-        : "";
-
-      row.append(line, info, platform);
-      card.appendChild(row);
-    });
+    group.departures.forEach(dep => card.appendChild(renderDeparture(dep)));
 
     container.appendChild(card);
   });
 
   $("pagination").hidden = totalPages <= 1;
-
-  $("pageLabel").textContent =
-    (currentPage + 1) + " / " + totalPages;
-
+  $("pageLabel").textContent = (currentPage + 1) + " / " + totalPages;
   $("prevButton").disabled = currentPage === 0;
   $("nextButton").disabled = currentPage >= totalPages - 1;
+
+  const singleDirection =
+    Boolean(selectedLine) && !onlyDelayed && directionGroups.length === 1;
+
+  renderDataNote(singleDirection);
 }
 
-function formatTime(date) {
-  return date.toLocaleTimeString("de-DE", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Europe/Berlin"
-  });
+function renderBoardTitle() {
+  $("selectedStop").textContent = selectedStop
+    ? selectedStop.name
+    : t("boardTitle");
 }
 
 // =====================================================
-// FILTERS
+// UI HELPERS
 // =====================================================
+
+function setStatus(key, vars) {
+  statusState = { key, vars: vars || null };
+  renderStatus();
+}
+
+function renderStatus() {
+  $("status").textContent = t(statusState.key, statusState.vars);
+}
+
+function setLoading(flag) {
+  $("refreshButton").disabled = flag;
+  $("refreshButton").classList.toggle("spinning", flag);
+}
+
+// Re-renders everything that contains text (used when the language changes).
+function renderAll() {
+  applyStaticTexts();
+  updateFilterButtons();
+  renderBoardTitle();
+  renderRecent();
+  renderStopResults();
+  renderSearchMessage();
+  renderLineFilters();
+  renderStatus();
+  renderBoard();
+}
+
+// =====================================================
+// EVENTS
+// =====================================================
+
+document.querySelectorAll("#langSwitch button").forEach(button => {
+  button.addEventListener("click", () => setLanguage(button.dataset.lang));
+});
 
 $("busFilter").addEventListener("click", () => {
   transportFilter = "bus";
   selectedLine = null;
-  currentPage = 0;
-
-  updateFilterButtons();
-  renderLineFilters();
-  buildDirectionGroups();
-  renderBoard();
+  onFilterChanged();
 });
 
 $("allFilter").addEventListener("click", () => {
   transportFilter = "all";
   selectedLine = null;
-  currentPage = 0;
-
-  updateFilterButtons();
-  renderLineFilters();
-  buildDirectionGroups();
-  renderBoard();
+  onFilterChanged();
 });
 
 $("delayedFilter").addEventListener("click", () => {
   onlyDelayed = !onlyDelayed;
-  currentPage = 0;
-
-  updateFilterButtons();
-  buildDirectionGroups();
-  renderBoard();
+  onFilterChanged();
 });
 
 $("allLinesFilter").addEventListener("click", () => {
+  const hadLine = Boolean(selectedLine);
   selectedLine = null;
-  currentPage = 0;
-
-  updateFilterButtons();
-  renderLineFilters();
-  buildDirectionGroups();
-  renderBoard();
+  onFilterChanged({ reload: hadLine });
 });
-
-// =====================================================
-// PAGINATION
-// =====================================================
 
 $("prevButton").addEventListener("click", () => {
   if (currentPage > 0) {
@@ -1437,36 +2555,28 @@ $("nextButton").addEventListener("click", () => {
   }
 });
 
-// =====================================================
-// EVENTS
-// =====================================================
-
 $("searchButton").addEventListener("click", searchStops);
 
 $("searchInput").addEventListener("keydown", event => {
-  if (event.key === "Enter") {
-    searchStops();
-  }
+  if (event.key === "Enter") searchStops();
 });
 
 $("refreshButton").addEventListener("click", () => {
-  // Принудительное обновление: сбрасываем кэш выбранной остановки.
-  if (selectedStop) {
-    selectedStop.ids.forEach(id => departureCache.delete(id));
-  }
+  // Forced refresh: drop the cache of the selected stop.
+  if (selectedStop) clearDepartureCacheFor(selectedStop.ids);
 
   refreshDepartures();
 });
 
 // =====================================================
-// AUTO REFRESH
+// AUTO REFRESH AND COUNTDOWN
 // =====================================================
 
 function startAutoRefresh() {
   stopAutoRefresh();
 
   refreshTimer = setInterval(() => {
-    if (selectedStop && !document.hidden && !loading) {
+    if (selectedStop && !document.hidden) {
       refreshDepartures();
     }
   }, REFRESH_INTERVAL);
@@ -1479,54 +2589,40 @@ function stopAutoRefresh() {
   }
 }
 
+// Updates the "in N min" labels without a network request and removes
+// departures that have already left.
+etaTimer = setInterval(() => {
+  if (document.hidden || !selectedStop || boardMessage) return;
+
+  if (allDepartures.some(item => !isFutureDeparture(item))) {
+    allDepartures = allDepartures.filter(isFutureDeparture);
+    buildDirectionGroups();
+    renderLineFilters();
+    renderBoard();
+    return;
+  }
+
+  etaRefs.forEach(({ el: node, dep }) => {
+    node.textContent = etaText(dep);
+  });
+}, ETA_TICK_INTERVAL);
+
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && selectedStop && !loading) {
-    selectedStop.ids.forEach(id => departureCache.delete(id));
+  if (!document.hidden && selectedStop) {
+    clearDepartureCacheFor(selectedStop.ids);
     refreshDepartures();
   }
 });
 
 // =====================================================
-// UI HELPERS
-// =====================================================
-
-function setStatus(text) {
-  $("status").textContent = text;
-}
-
-function showMessage(text, error = false) {
-  const board = $("board");
-  board.innerHTML = "";
-
-  const message = document.createElement("div");
-  message.className = error ? "message error" : "message";
-  message.textContent = text;
-
-  board.appendChild(message);
-}
-
-function explainError(error) {
-  if (error?.name === "AbortError") {
-    return "Превышено время ожидания.";
-  }
-
-  if (error instanceof TypeError) {
-    return "Ошибка сетевого соединения или CORS.";
-  }
-
-  return error?.message || "Неизвестная ошибка.";
-}
-
-// =====================================================
 // START
 // =====================================================
 
-updateFilterButtons();
+renderAll();
 
-console.log("Wuppertal Verkehr started.");
+console.log("Wuppertal Verkehr started. Language:", lang);
 console.log("VRR API:", API_BASE);
 console.log("Telegram Mini App:", Boolean(tg));
-
 </script>
 </body>
 </html>
