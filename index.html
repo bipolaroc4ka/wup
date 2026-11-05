@@ -27,6 +27,10 @@
 
 html { -webkit-text-size-adjust: 100%; }
 
+/* Without this, rules like ".pagination { display: flex }" override the
+   `hidden` attribute and "hidden" elements stay visible. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -196,6 +200,23 @@ button:disabled {
 /* ---------- recent stops ---------- */
 
 .recent { margin-top: 4px; }
+
+.recent-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.link-button {
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 2px;
+  margin-bottom: 1px;
+  font-size: 11px;
+  font-weight: normal;
+  text-decoration: underline;
+}
 
 .recent-list {
   display: flex;
@@ -593,7 +614,16 @@ button:disabled {
 <div id="searchMessage" class="search-message" hidden></div>
 
 <div class="recent" id="recent" hidden>
-  <div class="filter-caption" data-i18n="recent"></div>
+  <div class="recent-head">
+    <div class="filter-caption" data-i18n="recent"></div>
+    <button
+      type="button"
+      class="link-button"
+      id="clearRecent"
+      data-i18n="recentClear"
+      data-i18n-aria="recentClearAria"
+    ></button>
+  </div>
   <div class="recent-list" id="recentList"></div>
 </div>
 
@@ -670,6 +700,9 @@ const REQUEST_TIMEOUT = 20000;
 const CACHE_TTL = 15000;
 
 const MAX_RECENT = 5;
+// A recent stop is forgotten after 30 days WITHOUT being used. Every use
+// renews the timer, so stops you really use stay in the list.
+const RECENT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const STORAGE_LANG = "wv_lang";
 const STORAGE_RECENT = "wv_recent";
 
@@ -693,6 +726,8 @@ const I18N = {
     filterBus: "Busse",
     filterAll: "Alle Verkehrsmittel",
     recent: "ZULETZT VERWENDET",
+    recentClear: "Löschen",
+    recentClearAria: "Zuletzt verwendete Haltestellen löschen",
 
     boardTitle: "Abfahrten",
     boardHint: "Suche eine Haltestelle, um Abfahrten zu sehen.",
@@ -777,6 +812,8 @@ const I18N = {
     filterBus: "Автобусы",
     filterAll: "Весь транспорт",
     recent: "НЕДАВНИЕ",
+    recentClear: "Очистить",
+    recentClearAria: "Очистить список недавних остановок",
 
     boardTitle: "Отправления",
     boardHint: "Найди остановку, чтобы увидеть отправления.",
@@ -1142,23 +1179,66 @@ function shortStopName(name) {
 // RECENT STOPS
 // =====================================================
 
+function persistRecent() {
+  storageSet(STORAGE_RECENT, JSON.stringify(recentStops));
+}
+
+// Data from localStorage is not trusted: it may be corrupted, edited by hand
+// or written by an older version of the app. Only well-formed entries pass.
+function isValidRecentEntry(item) {
+  return Boolean(
+    item &&
+    typeof item.name === "string" &&
+    item.name.length > 0 &&
+    item.name.length <= 120 &&
+    Array.isArray(item.ids) &&
+    item.ids.length > 0 &&
+    item.ids.length <= MAX_IDS_PER_STOP &&
+    item.ids.every(id => typeof id === "string" && /^[\w:.-]{1,64}$/.test(id))
+  );
+}
+
 function loadRecent() {
   try {
-    const parsed = JSON.parse(storageGet(STORAGE_RECENT) || "[]");
+    const raw = storageGet(STORAGE_RECENT) || "[]";
+    const parsed = JSON.parse(raw);
 
     if (!Array.isArray(parsed)) return [];
 
-    return parsed
-      .filter(item =>
-        item &&
-        typeof item.name === "string" &&
-        Array.isArray(item.ids) &&
-        item.ids.length &&
-        item.ids.every(id => typeof id === "string")
-      )
+    const now = Date.now();
+
+    const result = parsed
+      .filter(isValidRecentEntry)
+      .map(item => ({
+        name: item.name,
+        ids: item.ids,
+        // Entries from older versions have no timestamp: their 30 days start
+        // now. A timestamp from the future (wrong device clock) is clamped.
+        usedAt: Number.isFinite(item.usedAt) ? Math.min(item.usedAt, now) : now
+      }))
+      .filter(item => now - item.usedAt <= RECENT_TTL_MS)
+      .sort((a, b) => b.usedAt - a.usedAt)
       .slice(0, MAX_RECENT);
+
+    // Write the cleaned list back (drops expired / broken entries for good).
+    if (JSON.stringify(result) !== raw) {
+      storageSet(STORAGE_RECENT, JSON.stringify(result));
+    }
+
+    return result;
   } catch {
     return [];
+  }
+}
+
+// Removes expired entries (the app may stay open for days in the background).
+function pruneRecent() {
+  const now = Date.now();
+  const fresh = recentStops.filter(item => now - item.usedAt <= RECENT_TTL_MS);
+
+  if (fresh.length !== recentStops.length) {
+    recentStops = fresh;
+    persistRecent();
   }
 }
 
@@ -1166,14 +1246,22 @@ function pushRecent(stop) {
   const key = stopKey(stop.name);
 
   recentStops = [
-    { name: stop.name, ids: stop.ids },
+    { name: stop.name, ids: stop.ids, usedAt: Date.now() },
     ...recentStops.filter(item => stopKey(item.name) !== key)
   ].slice(0, MAX_RECENT);
 
-  storageSet(STORAGE_RECENT, JSON.stringify(recentStops));
+  persistRecent();
+}
+
+function clearRecent() {
+  recentStops = [];
+  persistRecent();
+  renderRecent();
 }
 
 function renderRecent() {
+  pruneRecent();
+
   const list = $("recentList");
   list.textContent = "";
 
@@ -2602,6 +2690,11 @@ $("nextButton").addEventListener("click", () => {
   }
 });
 
+$("clearRecent").addEventListener("click", () => {
+  haptic();
+  clearRecent();
+});
+
 $("searchButton").addEventListener("click", searchStops);
 
 $("searchInput").addEventListener("keydown", event => {
@@ -2655,6 +2748,8 @@ etaTimer = setInterval(() => {
 }, ETA_TICK_INTERVAL);
 
 document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) renderRecent();
+
   if (!document.hidden && selectedStop) {
     clearDepartureCacheFor(selectedStop.ids);
     refreshDepartures();
