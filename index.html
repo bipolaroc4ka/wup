@@ -153,6 +153,14 @@ button:disabled {
   color: var(--text);
 }
 
+.grouping-row { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:12px; }
+.grouping-label { color:var(--muted); font-size:12px; margin-right:2px; }
+.grouping-button { padding:8px 10px; font-size:12px; }
+.grouping-button.active { background:var(--accent); color:#081321; }
+.footer a, .footer-link { color:var(--accent); text-decoration:none; }
+.footer-link { background:none; padding:0; font-size:inherit; font-weight:normal; }
+.about-panel { margin:12px auto 0; max-width:600px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--panel); text-align:left; }
+.about-panel p { margin:6px 0; }
 .controls {
   display: flex;
   gap: 8px;
@@ -638,6 +646,12 @@ button:disabled {
   <button class="secondary" id="delayedFilter"></button>
   <button class="secondary" id="allLinesFilter"></button>
 </div>
+<div class="grouping-row" role="group">
+  <span class="grouping-label" data-i18n="groupingLabel"></span>
+  <button type="button" class="secondary grouping-button" data-group="direction" data-i18n="groupDirection"></button>
+  <button type="button" class="secondary grouping-button" data-group="platform" data-i18n="groupPlatform"></button>
+  <button type="button" class="secondary grouping-button" data-group="list" data-i18n="groupList"></button>
+</div>
 
 <div class="filter-caption" id="lineCaption" hidden data-i18n="lineCaption"></div>
 <div class="line-filters" id="lineFilters"></div>
@@ -655,8 +669,12 @@ button:disabled {
 </div>
 
 <div class="footer">
-  <span data-i18n="footerSource"></span><br>
-  <span data-i18n="footerRefresh"></span>
+  <span data-i18n="footerSource"></span><br><span data-i18n="footerRefresh"></span><br>
+  <span data-i18n="footerProject"></span><br>
+  <a href="https://github.com/bipolaroc4ka" target="_blank" rel="noopener noreferrer">GitHub</a> ·
+  <a href="https://t.me/bipolar0c4ka" target="_blank" rel="noopener noreferrer">Telegram</a> ·
+  <button type="button" class="footer-link" id="aboutButton" data-i18n="about"></button>
+  <div id="aboutPanel" class="about-panel" hidden></div>
 </div>
 
 </div>
@@ -705,6 +723,7 @@ const MAX_RECENT = 5;
 const RECENT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const STORAGE_LANG = "wv_lang";
 const STORAGE_RECENT = "wv_recent";
+const STORAGE_GROUPING = "wv_grouping";
 
 const BUS_CLASSES = new Set([5, 6, 7]);
 
@@ -738,6 +757,8 @@ const I18N = {
 
     footerSource: "Daten: VRR OpenService",
     footerRefresh: "Automatische Aktualisierung alle 30 Sekunden",
+    footerProject: "Ein unabhängiges Projekt von @bipolar0c4ka", groupingLabel: "GRUPPIERUNG", groupDirection: "Richtung", groupPlatform: "Steig", groupList: "Liste", about: "Über die App",
+    aboutText: "Wuppertal Verkehr zeigt Abfahrten auf Basis des VRR OpenService. Die App ist ein unabhängiges Community-Projekt und steht in keiner offiziellen Verbindung zu VRR oder WSW. Sprache und zuletzt verwendete Haltestellen werden lokal in diesem Browser gespeichert. Es werden keine Werbe- oder Tracking-Cookies eingesetzt. An Cloudflare werden anonyme Zähler für App-Aufrufe, Suchen und Abfrageaktionen übertragen; dabei sendet die App weder Telegram-ID noch Suchtext. Cloudflare verarbeitet IP-Adressen technisch, unter anderem für Rate-Limiting.",
 
     statusReady: "Bereit",
     statusSearching: "Suche…",
@@ -762,7 +783,7 @@ const I18N = {
 
     countOne: "{n} Abfahrt",
     countMany: "{n} Abfahrten",
-    platform: "Steig {p}",
+    platform: "Steig {p}", platformUnknown: "Unbekannter Steig",
     planned: "Plan: {time}",
     cancelled: "Fällt aus",
     delay: "+{n} Min. Verspätung",
@@ -824,6 +845,8 @@ const I18N = {
 
     footerSource: "Данные: VRR OpenService",
     footerRefresh: "Автоматическое обновление каждые 30 секунд",
+    footerProject: "Независимый проект @bipolar0c4ka", groupingLabel: "ГРУППИРОВКА", groupDirection: "Направление", groupPlatform: "Платформа", groupList: "Список", about: "О приложении",
+    aboutText: "Wuppertal Verkehr показывает отправления на основе VRR OpenService. Это независимый проект сообщества, не являющийся официальным приложением VRR или WSW. Язык и недавние остановки хранятся локально в браузере. Рекламные и tracking-cookie не используются. В Cloudflare передаются анонимные счётчики открытий приложения, поисков и запросов расписания; Telegram ID и текст поиска не отправляются. Cloudflare технически обрабатывает IP, в том числе для ограничения запросов.",
 
     statusReady: "Готово",
     statusSearching: "Поиск…",
@@ -848,7 +871,7 @@ const I18N = {
 
     countOne: "{n} отправл.",
     countMany: "{n} отправл.",
-    platform: "Платф. {p}",
+    platform: "Платф. {p}", platformUnknown: "Платформа не указана",
     planned: "План: {time}",
     cancelled: "Отменён",
     delay: "+{n} мин. задержка",
@@ -982,6 +1005,8 @@ let selectedStop = null;
 let stopGroups = [];
 let allDepartures = [];
 let directionGroups = [];
+let groupingMode = storageGet(STORAGE_GROUPING) || "direction";
+if (!["direction", "platform", "list"].includes(groupingMode)) groupingMode = "direction";
 let summaryStats = null;
 let dataUntil = null;
 
@@ -1040,6 +1065,13 @@ function el(tag, className, text) {
 }
 
 // =====================================================
+// Anonymous counters only: no Telegram ID, IP or search text is sent by the client.
+function trackEvent(eventName) {
+  try { fetch(API_BASE + "analytics", {method:"POST", mode:"cors", keepalive:true,
+    headers:{"Content-Type":"application/json"}, body:JSON.stringify({event:eventName})}).catch(()=>{}); }
+  catch (_) {}
+}
+
 // API HELPERS
 // =====================================================
 
@@ -1280,6 +1312,7 @@ function renderRecent() {
 // =====================================================
 
 async function searchStops() {
+  trackEvent("search");
   const rawQuery = $("searchInput").value.trim();
 
   if (rawQuery.length < 2) {
@@ -1874,6 +1907,7 @@ async function fetchStationDepartures(stationId, deep) {
 }
 
 async function refreshDepartures() {
+  trackEvent("departures");
   if (!selectedStop) return;
 
   const stop = selectedStop;
@@ -2210,64 +2244,30 @@ function getFilteredDepartures() {
 function buildDirectionGroups() {
   const departures = getFilteredDepartures();
   const groups = new Map();
-
-  // One card per direction: destination + platform (the two sides of a
-  // street have different platforms even if the destination text is similar).
   for (const departure of departures) {
-    const key = normalizeName(departure.destination) + "|" + departure.platform;
-
-    if (!groups.has(key)) {
-      groups.set(key, {
-        destination: departure.destination,
-        platform: departure.platform,
-        total: 0,
-        departures: []
-      });
+    let key, destination, platform;
+    if (groupingMode === "list") {
+      key = String(departure.id); destination = departure.destination; platform = departure.platform;
+    } else if (groupingMode === "platform") {
+      key = String(departure.platform || "unknown");
+      destination = departure.platform ? t("platform", {p: departure.platform}) : t("platformUnknown");
+      platform = departure.platform;
+    } else {
+      key = normalizeName(departure.destination) + "|" + departure.platform;
+      destination = departure.destination; platform = departure.platform;
     }
-
-    const group = groups.get(key);
-    group.total++;
-    group.departures.push(departure);
+    if (!groups.has(key)) groups.set(key, {destination, platform, total:0, departures:[]});
+    const group = groups.get(key); group.total++; group.departures.push(departure);
   }
-
-  const perDirection = selectedLine
-    ? DEPARTURES_PER_DIRECTION_WITH_LINE
-    : DEPARTURES_PER_DIRECTION;
-
-  directionGroups = [...groups.values()]
-    .map(group => ({
-      ...group,
-      departures: group.departures
-        .sort((a, b) => a.timestamp - b.timestamp)
-        .slice(0, perDirection)
-    }))
-    .sort((a, b) => {
-      const timeA = a.departures[0]?.timestamp || Infinity;
-      const timeB = b.departures[0]?.timestamp || Infinity;
-
-      return timeA - timeB;
-    });
-
-  // Delay statistics over everything that matches the filters.
-  const active = departures.filter(item => !item.cancelled);
-  const late = active.filter(item => item.delay >= 1);
-
-  summaryStats = departures.length
-    ? {
-        onTime: active.filter(item => item.hasRealtime && item.delay <= 0).length,
-        late: late.length,
-        maxLate: late.reduce((max, item) => Math.max(max, item.delay), 0),
-        cancelled: departures.length - active.length
-      }
-    : null;
-
-  const totalPages = Math.max(1, Math.ceil(directionGroups.length / PAGE_SIZE));
-  currentPage = Math.min(currentPage, totalPages - 1);
+  const perDirection = selectedLine ? DEPARTURES_PER_DIRECTION_WITH_LINE : DEPARTURES_PER_DIRECTION;
+  directionGroups = [...groups.values()].map(group => ({...group, departures:group.departures
+    .sort((a,b)=>a.timestamp-b.timestamp).slice(0, groupingMode === "list" ? 1 : perDirection)}))
+    .sort((a,b)=>(a.departures[0]?.timestamp||Infinity)-(b.departures[0]?.timestamp||Infinity));
+  const active = departures.filter(item=>!item.cancelled), late=active.filter(item=>item.delay>=1);
+  summaryStats = departures.length ? {onTime:active.filter(item=>item.hasRealtime&&item.delay<=0).length,
+    late:late.length,maxLate:late.reduce((m,i)=>Math.max(m,i.delay),0),cancelled:departures.length-active.length}:null;
+  currentPage=Math.min(currentPage,Math.max(1,Math.ceil(directionGroups.length/PAGE_SIZE))-1);
 }
-
-// =====================================================
-// LINE FILTER BUTTONS
-// =====================================================
 
 function renderLineFilters() {
   const container = $("lineFilters");
@@ -2481,7 +2481,9 @@ function renderDeparture(dep) {
 
   row.setAttribute("aria-expanded", String(expanded.has(dep.id)));
 
-  const line = el("div", "line", dep.line);
+  const lineLabel = String(dep.line) === "60" ? "Schwebebahn" : dep.line;
+  const line = el("div", "line", lineLabel);
+  if (String(dep.line) === "60") line.classList.add("line-schwebebahn");
 
   const info = el("div");
 
@@ -2499,7 +2501,8 @@ function renderDeparture(dep) {
     etaRefs.push({ el: eta, dep });
   }
 
-  const planned = el("div", "destination", t("planned", { time: formatTime(dep.planned) }));
+  const plannedText = t("planned", { time: formatTime(dep.planned) });
+  const planned = el("div", "destination", groupingMode === "direction" ? plannedText : (dep.destination + " · " + plannedText));
 
   info.append(timeRow, planned, renderStatusLine(dep));
 
@@ -2582,13 +2585,10 @@ function renderBoard() {
 
     const title = el("div", "direction-title");
     title.appendChild(el("span", "", group.destination));
-
-    const meta = group.platform
-      ? t("platform", { p: group.platform }) + " · " + countText(group.total)
-      : countText(group.total);
-
-    title.appendChild(el("small", "", meta));
-    card.appendChild(title);
+    const meta = groupingMode === "list" ? "" : (groupingMode === "platform" ? countText(group.total) :
+      (group.platform ? t("platform", {p:group.platform}) + " · " + countText(group.total) : countText(group.total)));
+    if (meta) title.appendChild(el("small", "", meta));
+    if (groupingMode !== "list") card.appendChild(title);
 
     group.departures.forEach(dep => card.appendChild(renderDeparture(dep)));
 
@@ -2631,8 +2631,17 @@ function setLoading(flag) {
 }
 
 // Re-renders everything that contains text (used when the language changes).
+function renderGroupingButtons() {
+  document.querySelectorAll("[data-group]").forEach(button => {
+    button.classList.toggle("active", button.dataset.group === groupingMode);
+    button.setAttribute("aria-pressed", String(button.dataset.group === groupingMode));
+  });
+}
+
 function renderAll() {
   applyStaticTexts();
+  renderGroupingButtons();
+  $("aboutPanel").textContent = t("aboutText");
   updateFilterButtons();
   renderBoardTitle();
   renderRecent();
@@ -2646,6 +2655,12 @@ function renderAll() {
 // =====================================================
 // EVENTS
 // =====================================================
+document.querySelectorAll("[data-group]").forEach(button => button.addEventListener("click", () => {
+  groupingMode = button.dataset.group; storageSet(STORAGE_GROUPING, groupingMode);
+  currentPage = 0; renderGroupingButtons(); buildDirectionGroups(); renderBoard();
+}));
+$("aboutButton").addEventListener("click", () => { $("aboutPanel").hidden = !$("aboutPanel").hidden; });
+
 
 document.querySelectorAll("#langSwitch button").forEach(button => {
   button.addEventListener("click", () => setLanguage(button.dataset.lang));
@@ -2761,6 +2776,7 @@ document.addEventListener("visibilitychange", () => {
 // =====================================================
 
 renderAll();
+trackEvent("open");
 
 console.log("Wuppertal Verkehr started. Language:", lang);
 console.log("VRR API:", API_BASE);
