@@ -110,7 +110,7 @@ h2 {
   gap: 8px;
 }
 
-input {
+input:not([type="checkbox"]) {
   min-width: 0;
   flex: 1;
   padding: 14px;
@@ -153,14 +153,6 @@ button:disabled {
   color: var(--text);
 }
 
-.grouping-row { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:12px; }
-.grouping-label { color:var(--muted); font-size:12px; margin-right:2px; }
-.grouping-button { padding:8px 10px; font-size:12px; }
-.grouping-button.active { background:var(--accent); color:#081321; }
-.footer a, .footer-link { color:var(--accent); text-decoration:none; }
-.footer-link { background:none; padding:0; font-size:inherit; font-weight:normal; }
-.about-panel { margin:12px auto 0; max-width:600px; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--panel); text-align:left; }
-.about-panel p { margin:6px 0; }
 .controls {
   display: flex;
   gap: 8px;
@@ -583,6 +575,271 @@ button:disabled {
   .spinner, #refreshButton.spinning { animation-duration: 3s; }
   .chev { transition: none; }
 }
+
+/* ---------- header tools / about button ---------- */
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-button {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.icon-button:hover { color: var(--text); }
+
+/* ---------- grouping switch ---------- */
+
+.group-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-top: 16px;
+}
+
+.group-label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.seg button {
+  background: transparent;
+  color: var(--muted);
+  border-radius: 0;
+  padding: 8px 13px;
+  font-size: 12px;
+}
+
+.seg button.active {
+  background: var(--accent);
+  color: #081321;
+}
+
+/* ---------- direction / platform / line cards ---------- */
+
+.dt-main { min-width: 0; }
+
+.dt-title { overflow-wrap: anywhere; }
+
+.dt-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.line-sb {
+  background: #fde68a;
+  color: #3b2f00;
+}
+
+.more-button {
+  width: 100%;
+  border-radius: 0;
+  border-top: 1px solid var(--border);
+  padding: 11px;
+  font-size: 12px;
+}
+
+/* ---------- bottom sheet ---------- */
+
+body.no-scroll { overflow: hidden; }
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(5, 10, 20, .72);
+}
+
+.sheet-card {
+  width: min(620px, 100%);
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px 18px 0 0;
+  padding: 0 18px calc(22px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .sheet { align-items: center; }
+  .sheet-card { border-radius: 18px; }
+}
+
+.sheet-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0 10px;
+  background: var(--panel);
+}
+
+.sheet-head h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.sheet-body {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.sheet-body h4 {
+  margin: 18px 0 6px;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.sheet-body p {
+  margin: 0 0 10px;
+  overflow-wrap: anywhere;
+}
+
+.sheet-lead { font-size: 15px; }
+
+.muted { color: var(--muted); }
+
+.about-data { margin-top: 16px; }
+
+.provider {
+  white-space: pre-line;
+  background: var(--panel2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.legal-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.about-brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.about-brand strong { font-size: 20px; }
+
+.about-card {
+  background: var(--panel2);
+  border-radius: 14px;
+  padding: 14px;
+  margin: 14px 0;
+}
+
+.about-handle {
+  display: block;
+  margin: 4px 0 12px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.about-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-link {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #081321;
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.btn-link.outline {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.sheet-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 16px;
+}
+
+.switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 14px;
+}
+
+.switch input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.switch small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------- footer credit ---------- */
+
+.footer-credit { margin-top: 12px; }
+
+.footer-credit a {
+  color: var(--accent);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px 8px;
+  margin-top: 6px;
+}
+
+.footer-links .link-button { padding: 4px 2px; }
 </style>
 </head>
 
@@ -593,9 +850,12 @@ button:disabled {
   <div class="logo">Wuppertal <span>Verkehr</span></div>
 
   <div class="header-right">
-    <div class="lang-switch" id="langSwitch" role="group" data-i18n-aria="langLabel">
-      <button type="button" data-lang="de">DE</button>
-      <button type="button" data-lang="ru">RU</button>
+    <div class="header-tools">
+      <div class="lang-switch" id="langSwitch" role="group" data-i18n-aria="langLabel">
+        <button type="button" data-lang="de">DE</button>
+        <button type="button" data-lang="ru">RU</button>
+      </div>
+      <button type="button" class="icon-button" id="aboutButton" data-i18n-aria="aboutOpen">ⓘ</button>
     </div>
     <div class="status" id="status" role="status" aria-live="polite"></div>
   </div>
@@ -615,6 +875,7 @@ button:disabled {
 
 <div class="controls">
   <button class="active" id="busFilter" data-i18n="filterBus"></button>
+  <button class="secondary" id="sbFilter" data-i18n="filterSb"></button>
   <button class="secondary" id="allFilter" data-i18n="filterAll"></button>
 </div>
 
@@ -646,15 +907,18 @@ button:disabled {
   <button class="secondary" id="delayedFilter"></button>
   <button class="secondary" id="allLinesFilter"></button>
 </div>
-<div class="grouping-row" role="group">
-  <span class="grouping-label" data-i18n="groupingLabel"></span>
-  <button type="button" class="secondary grouping-button" data-group="direction" data-i18n="groupDirection"></button>
-  <button type="button" class="secondary grouping-button" data-group="platform" data-i18n="groupPlatform"></button>
-  <button type="button" class="secondary grouping-button" data-group="list" data-i18n="groupList"></button>
-</div>
 
 <div class="filter-caption" id="lineCaption" hidden data-i18n="lineCaption"></div>
 <div class="line-filters" id="lineFilters"></div>
+
+<div class="group-bar" id="groupBar" hidden>
+  <span class="group-label" data-i18n="groupBy"></span>
+  <div class="seg" id="groupSwitch" role="group" data-i18n-aria="groupBy">
+    <button type="button" data-group="direction" data-i18n="groupDirection"></button>
+    <button type="button" data-group="platform" data-i18n="groupPlatform"></button>
+    <button type="button" data-group="line" data-i18n="groupLine"></button>
+  </div>
+</div>
 
 <div class="summary" id="summary" hidden></div>
 
@@ -669,14 +933,34 @@ button:disabled {
 </div>
 
 <div class="footer">
-  <span data-i18n="footerSource"></span><br><span data-i18n="footerRefresh"></span><br>
-  <span data-i18n="footerProject"></span><br>
-  <a href="https://github.com/bipolaroc4ka" target="_blank" rel="noopener noreferrer">GitHub</a> ·
-  <a href="https://t.me/bipolar0c4ka" target="_blank" rel="noopener noreferrer">Telegram</a> ·
-  <button type="button" class="footer-link" id="aboutButton" data-i18n="about"></button>
-  <div id="aboutPanel" class="about-panel" hidden></div>
+  <span data-i18n="footerSource"></span><br>
+  <span data-i18n="footerRefresh"></span>
+
+  <div class="footer-credit">
+    <span data-i18n="footerBuiltBy"></span>
+    <a href="https://t.me/bipolar0c4ka" data-ext="1" target="_blank" rel="noopener noreferrer">@bipolar0c4ka</a>
+  </div>
+
+  <div class="footer-links">
+    <button type="button" class="link-button" data-sheet="privacy" data-i18n="linkPrivacy"></button>
+    <span aria-hidden="true">·</span>
+    <button type="button" class="link-button" data-sheet="imprint" data-i18n="linkImprint"></button>
+    <span aria-hidden="true">·</span>
+    <button type="button" class="link-button" data-sheet="about" data-i18n="linkAbout"></button>
+  </div>
 </div>
 
+</div>
+
+<!-- Bottom sheet used for "About", "Datenschutz" and "Impressum" -->
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <h3 id="sheetTitle"></h3>
+      <button type="button" class="icon-button" id="sheetClose">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
 </div>
 
 <script>
@@ -723,9 +1007,46 @@ const MAX_RECENT = 5;
 const RECENT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const STORAGE_LANG = "wv_lang";
 const STORAGE_RECENT = "wv_recent";
-const STORAGE_GROUPING = "wv_grouping";
 
 const BUS_CLASSES = new Set([5, 6, 7]);
+
+// The Wuppertal Schwebebahn is line 60 (WSW). VRR may not label it with a
+// clear product class, so the line number is used as a fallback.
+const SCHWEBEBAHN_LINES = new Set(["60"]);
+
+const GROUP_MODES = ["direction", "platform", "line"];
+const STORAGE_GROUP = "wv_group";
+const STORAGE_STATS = "wv_stats";
+
+// ----- Request protection (the API proxy rate-limits and caches) -----
+const DEEP_PAGE_TTL = 90000;            // cache for look-ahead pages (ms)
+const MANUAL_REFRESH_COOLDOWN = 3000;   // min. time between manual refreshes
+const VISIBILITY_REFRESH_MIN = 20000;   // refresh on return only if data is older
+const MAX_BACKOFF = 300000;             // longest pause after repeated errors
+
+// ----- Author / project -----
+const APP_VERSION = "2.1";
+const AUTHOR_HANDLE = "@bipolar0c4ka";
+const AUTHOR_TELEGRAM_URL = "https://t.me/bipolar0c4ka";
+const AUTHOR_GITHUB_URL = "https://github.com/bipolaroc4ka";
+
+// ----- Provider data for "Impressum" and "Datenschutz" -----
+// FILL IN before you publish the app. An empty field is shown as
+// "[Angaben des Anbieters fehlen]" so the gap cannot be overlooked.
+const LEGAL = {
+  name: "Illia Sychov",      // full name of the provider
+  street: "Freiligrastrasse",    // street and house number
+  zipCity: "42289 Wuppertal",   // e.g. "42103 Wuppertal"
+  email: "isychev10@gmail.com"      // optional, Telegram contact is always shown
+};
+const LEGAL_UPDATED = "November 2026";
+
+// ----- Anonymous usage statistics -----
+// Leave empty to disable statistics completely. After deploying the stats
+// worker (stats-worker.js) set its URL, e.g.
+//   "https://wuppertal-stats.YOUR-SUBDOMAIN.workers.dev/e"
+const STATS_URL = "";
+const STATS_MAX_EVENTS = 80;            // max. events per app session
 
 const $ = id => document.getElementById(id);
 
@@ -752,13 +1073,11 @@ const I18N = {
     boardHint: "Suche eine Haltestelle, um Abfahrten zu sehen.",
     filterDelayed: "Nur Verspätungen",
     filterAllLines: "Alle Linien",
-    filterLineSel: "Linie {line} ×",
+    filterLineSel: "{line} ×",
     lineCaption: "NACH LINIE FILTERN",
 
     footerSource: "Daten: VRR OpenService",
     footerRefresh: "Automatische Aktualisierung alle 30 Sekunden",
-    footerProject: "Ein unabhängiges Projekt von @bipolar0c4ka", groupingLabel: "GRUPPIERUNG", groupDirection: "Richtung", groupPlatform: "Steig", groupList: "Liste", about: "Über die App",
-    aboutText: "Wuppertal Verkehr zeigt Abfahrten auf Basis des VRR OpenService. Die App ist ein unabhängiges Community-Projekt und steht in keiner offiziellen Verbindung zu VRR oder WSW. Sprache und zuletzt verwendete Haltestellen werden lokal in diesem Browser gespeichert. Es werden keine Werbe- oder Tracking-Cookies eingesetzt. An Cloudflare werden anonyme Zähler für App-Aufrufe, Suchen und Abfrageaktionen übertragen; dabei sendet die App weder Telegram-ID noch Suchtext. Cloudflare verarbeitet IP-Adressen technisch, unter anderem für Rate-Limiting.",
 
     statusReady: "Bereit",
     statusSearching: "Suche…",
@@ -783,7 +1102,7 @@ const I18N = {
 
     countOne: "{n} Abfahrt",
     countMany: "{n} Abfahrten",
-    platform: "Steig {p}", platformUnknown: "Unbekannter Steig",
+    platform: "Steig {p}",
     planned: "Plan: {time}",
     cancelled: "Fällt aus",
     delay: "+{n} Min. Verspätung",
@@ -819,6 +1138,50 @@ const I18N = {
     err_http: "VRR-Fehler (HTTP {code}).",
     err_json: "VRR hat ungültige Daten geliefert.",
     err_allFailed: "Von keiner Haltestellen-Kennung konnten Daten geladen werden.",
+    aboutOpen: "Über die App",
+    filterSb: "Schwebebahn",
+    kindSb: "Schwebebahn",
+    noSb: "Zurzeit keine Schwebebahn-Abfahrten. Andere Verkehrsmittel: {n}. Tippe auf „Alle Verkehrsmittel“.",
+    lineTitle: "Linie {line}",
+    lineTitleSb: "Schwebebahn {line}",
+
+    groupBy: "Gruppieren nach",
+    groupDirection: "Richtung",
+    groupPlatform: "Steig",
+    groupLine: "Linie",
+    groupNoPlatform: "Ohne Steig-Angabe",
+    groupLinesSub: "Linien: {lines}",
+    platformsMany: "Steige {p}",
+    groupMore: "Mehr anzeigen (+{n})",
+    groupLess: "Weniger anzeigen",
+
+    err_rate: "Zu viele Anfragen. Bitte in {sec} Sek. erneut versuchen.",
+
+    footerBuiltBy: "Gebaut in Wuppertal von",
+    linkPrivacy: "Datenschutz",
+    linkImprint: "Impressum",
+    linkAbout: "Über die App",
+    close: "Schließen",
+    sheetAbout: "Über die App",
+    sheetPrivacy: "Datenschutzerklärung",
+    sheetImprint: "Impressum",
+
+    aboutLead: "Abfahrten, Verspätungen und Haltestellenfolgen für Busse und die Schwebebahn in Wuppertal – in beiden Fahrtrichtungen.",
+    aboutBy: "Gebaut in Wuppertal von",
+    aboutFeedback: "Fehler gefunden oder eine Idee? Schreib mir direkt:",
+    aboutWrite: "Nachricht schreiben",
+    aboutData: "Fahrplandaten: VRR OpenService. Unabhängiges Projekt ohne Verbindung zu VRR, WSW oder Telegram. Alle Angaben ohne Gewähr.",
+    aboutVersion: "Version {v}",
+    statsLabel: "Anonyme Nutzungsstatistik",
+    statsHint: "Zählt nur, wie oft die App genutzt wird – ohne Cookies und ohne Kennung auf deinem Gerät.",
+    statsDnt: "Ausgeschaltet, weil dein Browser „Do Not Track“ sendet.",
+
+    legalMissing: "[Angaben des Anbieters fehlen]",
+    legalEmail: "E-Mail: {v}",
+    legalContact: "Telegram: {v}",
+    legalLangNote: "",
+    legalUpdated: "Stand: {v}",
+
     errUnknown: "Unbekannter Fehler."
   },
 
@@ -840,13 +1203,11 @@ const I18N = {
     boardHint: "Найди остановку, чтобы увидеть отправления.",
     filterDelayed: "Только задержанные",
     filterAllLines: "Все маршруты",
-    filterLineSel: "Маршрут {line} ×",
+    filterLineSel: "{line} ×",
     lineCaption: "ФИЛЬТР ПО МАРШРУТУ",
 
     footerSource: "Данные: VRR OpenService",
     footerRefresh: "Автоматическое обновление каждые 30 секунд",
-    footerProject: "Независимый проект @bipolar0c4ka", groupingLabel: "ГРУППИРОВКА", groupDirection: "Направление", groupPlatform: "Платформа", groupList: "Список", about: "О приложении",
-    aboutText: "Wuppertal Verkehr показывает отправления на основе VRR OpenService. Это независимый проект сообщества, не являющийся официальным приложением VRR или WSW. Язык и недавние остановки хранятся локально в браузере. Рекламные и tracking-cookie не используются. В Cloudflare передаются анонимные счётчики открытий приложения, поисков и запросов расписания; Telegram ID и текст поиска не отправляются. Cloudflare технически обрабатывает IP, в том числе для ограничения запросов.",
 
     statusReady: "Готово",
     statusSearching: "Поиск…",
@@ -871,7 +1232,7 @@ const I18N = {
 
     countOne: "{n} отправл.",
     countMany: "{n} отправл.",
-    platform: "Платф. {p}", platformUnknown: "Платформа не указана",
+    platform: "Платф. {p}",
     planned: "План: {time}",
     cancelled: "Отменён",
     delay: "+{n} мин. задержка",
@@ -907,6 +1268,50 @@ const I18N = {
     err_http: "Ошибка VRR (HTTP {code}).",
     err_json: "VRR вернул некорректные данные.",
     err_allFailed: "Не удалось получить данные ни по одному ID остановки.",
+    aboutOpen: "О приложении",
+    filterSb: "Швебебан",
+    kindSb: "Швебебан",
+    noSb: "Отправлений Швебебана в ближайшее время нет. Другого транспорта: {n}. Нажми «Весь транспорт».",
+    lineTitle: "Маршрут {line}",
+    lineTitleSb: "Швебебан {line}",
+
+    groupBy: "Группировать по",
+    groupDirection: "Направлению",
+    groupPlatform: "Платформе",
+    groupLine: "Маршруту",
+    groupNoPlatform: "Платформа не указана",
+    groupLinesSub: "Маршруты: {lines}",
+    platformsMany: "Платф. {p}",
+    groupMore: "Показать ещё (+{n})",
+    groupLess: "Свернуть",
+
+    err_rate: "Слишком много запросов. Повтори через {sec} сек.",
+
+    footerBuiltBy: "Сделано в Вуппертале:",
+    linkPrivacy: "Конфиденциальность",
+    linkImprint: "Impressum",
+    linkAbout: "О приложении",
+    close: "Закрыть",
+    sheetAbout: "О приложении",
+    sheetPrivacy: "Политика конфиденциальности (Datenschutz)",
+    sheetImprint: "Выходные данные (Impressum)",
+
+    aboutLead: "Отправления, задержки и список остановок для автобусов и Швебебана в Вуппертале — в обоих направлениях.",
+    aboutBy: "Сделано в Вуппертале:",
+    aboutFeedback: "Нашли ошибку или есть идея? Напишите мне напрямую:",
+    aboutWrite: "Написать сообщение",
+    aboutData: "Данные расписаний: VRR OpenService. Независимый проект, не связанный с VRR, WSW или Telegram. Информация без гарантии.",
+    aboutVersion: "Версия {v}",
+    statsLabel: "Анонимная статистика использования",
+    statsHint: "Считает только, как часто используется приложение — без cookie и без идентификатора на вашем устройстве.",
+    statsDnt: "Выключено, потому что ваш браузер отправляет «Do Not Track».",
+
+    legalMissing: "[Данные провайдера не заполнены]",
+    legalEmail: "E-Mail: {v}",
+    legalContact: "Telegram: {v}",
+    legalLangNote: "Русский текст — перевод для удобства. Юридически обязательна немецкая версия.",
+    legalUpdated: "Актуально на: {v}",
+
     errUnknown: "Неизвестная ошибка."
   }
 };
@@ -921,6 +1326,11 @@ function storageGet(key) {
 
 function storageSet(key, value) {
   try { localStorage.setItem(key, value); } catch { /* ignore */ }
+}
+
+function loadGroupMode() {
+  const saved = storageGet(STORAGE_GROUP);
+  return GROUP_MODES.includes(saved) ? saved : "direction";
 }
 
 // =====================================================
@@ -993,6 +1403,7 @@ function setLanguage(newLang) {
 
   lang = newLang;
   storageSet(STORAGE_LANG, lang);
+  track("lang", lang);
   haptic();
   renderAll();
 }
@@ -1005,15 +1416,23 @@ let selectedStop = null;
 let stopGroups = [];
 let allDepartures = [];
 let directionGroups = [];
-let groupingMode = storageGet(STORAGE_GROUPING) || "direction";
-if (!["direction", "platform", "list"].includes(groupingMode)) groupingMode = "direction";
 let summaryStats = null;
 let dataUntil = null;
 
 let currentPage = 0;
-let transportFilter = "bus";
+let transportFilter = "bus";      // "bus" | "schwebebahn" | "all"
 let onlyDelayed = false;
 let selectedLine = null;
+let groupMode = loadGroupMode();  // "direction" | "platform" | "line"
+let directionCount = 0;           // distinct destinations among filtered departures
+let lineKindMap = new Map();      // line -> "bus" | "schwebebahn" | "other"
+
+// Request protection: back-off after errors / HTTP 429 and manual throttle.
+let rateLimitedUntil = 0;
+let nextRefreshAllowedAt = 0;
+let failStreak = 0;
+let lastSuccessAt = 0;
+let lastManualAt = 0;
 
 let refreshTimer = null;
 let etaTimer = null;
@@ -1026,7 +1445,9 @@ let searchMessage = null;    // {key, vars, error, err}
 
 let recentStops = loadRecent();
 
-const departureCache = new Map();  // "stationId|std|deep" -> {timestamp, data}
+const departureCache = new Map();  // "stationId|now|<minute>" -> {timestamp, data}
+const inflight = new Map();        // url -> Promise (identical requests are shared)
+const moreGroups = new Set();      // group ids that show ALL their departures
 const tripCache = new Map();       // departure id -> {status, stops, ts}
 const expanded = new Set();        // ids of opened departures
 const showAllStops = new Set();    // ids whose stop list is fully shown
@@ -1065,13 +1486,6 @@ function el(tag, className, text) {
 }
 
 // =====================================================
-// Anonymous counters only: no Telegram ID, IP or search text is sent by the client.
-function trackEvent(eventName) {
-  try { fetch(API_BASE + "analytics", {method:"POST", mode:"cors", keepalive:true,
-    headers:{"Content-Type":"application/json"}, body:JSON.stringify({event:eventName})}).catch(()=>{}); }
-  catch (_) {}
-}
-
 // API HELPERS
 // =====================================================
 
@@ -1084,6 +1498,20 @@ async function apiRequest(endpoint, params) {
     }
   });
 
+  // Respect a previous HTTP 429 without sending anything.
+  const wait = rateLimitedUntil - Date.now();
+  if (wait > 0) throw new AppError("rate", { sec: Math.ceil(wait / 1000) });
+
+  // Identical requests that are already running share one network call.
+  const key = url.toString();
+  if (inflight.has(key)) return inflight.get(key);
+
+  const promise = requestJson(url).finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+  return promise;
+}
+
+async function requestJson(url) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -1093,6 +1521,16 @@ async function apiRequest(endpoint, params) {
       headers: { "Accept": "application/json" },
       signal: controller.signal
     });
+
+    if (response.status === 429) {
+      const header = Number(response.headers.get("Retry-After"));
+      const sec = Number.isFinite(header) && header > 0
+        ? Math.min(header, 300)
+        : 30;
+
+      rateLimitedUntil = Date.now() + sec * 1000;
+      throw new AppError("rate", { sec });
+    }
 
     if (!response.ok) {
       throw new AppError("http", { code: response.status });
@@ -1312,7 +1750,6 @@ function renderRecent() {
 // =====================================================
 
 async function searchStops() {
-  trackEvent("search");
   const rawQuery = $("searchInput").value.trim();
 
   if (rawQuery.length < 2) {
@@ -1547,6 +1984,10 @@ async function selectStop(stop) {
   currentPage = 0;
   selectedLine = null;
   onlyDelayed = false;
+  failStreak = 0;
+  nextRefreshAllowedAt = 0;
+  moreGroups.clear();
+  track("stop", selectedStop.name);
 
   allDepartures = [];
   directionGroups = [];
@@ -1795,11 +2236,13 @@ function parseDeparture(item, stationId) {
       ? Math.round((estimatedRaw.getTime() - planned.getTime()) / 60000)
       : 0,
     cancelled: isCancelledItem(item),
+    kind: "other",
     isBus: false,
     id: ""
   };
 
-  departure.isBus = classifyBus(departure);
+  departure.kind = classifyKind(departure);
+  departure.isBus = departure.kind === "bus";
   departure.id = [
     departure.stationId,
     line,
@@ -1810,12 +2253,26 @@ function parseDeparture(item, stationId) {
   return departure;
 }
 
-function classifyBus(departure) {
-  if (BUS_CLASSES.has(departure.productClass)) return true;
-  if (departure.productClass !== null) return false;
+// "bus" | "schwebebahn" | "other"
+function classifyKind(departure) {
+  const text = normalizeName(departure.product);
+
+  if (/schwebe/.test(text)) return "schwebebahn";
+
+  // Fallback: the Wuppertal Schwebebahn is line 60 (no bus has that number).
+  if (
+    SCHWEBEBAHN_LINES.has(departure.line) &&
+    departure.stationId.startsWith(CITY_ID_PREFIX) &&
+    !/bus/.test(text)
+  ) {
+    return "schwebebahn";
+  }
+
+  if (BUS_CLASSES.has(departure.productClass)) return "bus";
+  if (departure.productClass !== null) return "other";
 
   // No class given: decide by the product / transport name.
-  return /bus/.test(normalizeName(departure.product));
+  return /bus/.test(text) ? "bus" : "other";
 }
 
 function isFutureDeparture(item) {
@@ -1851,6 +2308,35 @@ function deduplicateDepartures(items) {
 // DEPARTURE REQUESTS
 // =====================================================
 
+// One EFA page (next N events from `start`, or from now when start is null).
+// Pages are cached: the first page is shared by normal and deep mode.
+async function fetchPage(stationId, start) {
+  const slot = start === null ? "now" : String(Math.floor(start / 60000));
+  const key = stationId + "|p|" + slot;
+  const ttl = start === null ? CACHE_TTL : DEEP_PAGE_TTL;
+  const cached = departureCache.get(key);
+
+  if (cached && Date.now() - cached.timestamp < ttl) return cached.data;
+
+  const data = await apiRequest("XML_DM_REQUEST", dmParams(stationId, start));
+
+  const parsed = extractDepartures(data)
+    .map(raw => parseDeparture(raw, stationId))
+    .filter(Boolean);
+
+  departureCache.set(key, { timestamp: Date.now(), data: parsed });
+
+  // Keep the cache small.
+  if (departureCache.size > 60) {
+    const oldest = [...departureCache.entries()]
+      .sort((a, b) => a[1].timestamp - b[1].timestamp)
+      .slice(0, 20);
+    oldest.forEach(([k]) => departureCache.delete(k));
+  }
+
+  return parsed;
+}
+
 // Departures of ONE station id.
 // deep = false: one request (next N events).
 // deep = true : several requests, each starting where the previous one ended,
@@ -1858,13 +2344,6 @@ function deduplicateDepartures(items) {
 //               the next N events, so at a busy hub a rare line could
 //               otherwise show up in one direction only.
 async function fetchStationDepartures(stationId, deep) {
-  const cacheKey = stationId + "|" + (deep ? "deep" : "std");
-  const cached = departureCache.get(cacheKey);
-
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
-
   const collected = new Map();
   const horizonEnd = Date.now() + DEEP_HORIZON_MIN * 60000;
   let start = null;
@@ -1872,18 +2351,14 @@ async function fetchStationDepartures(stationId, deep) {
   const pages = deep ? DEEP_MAX_PAGES : 1;
 
   for (let page = 0; page < pages; page++) {
-    let data;
+    let parsed;
 
     try {
-      data = await apiRequest("XML_DM_REQUEST", dmParams(stationId, start));
+      parsed = await fetchPage(stationId, start);
     } catch (error) {
       if (page === 0) throw error;   // nothing at all -> report the error
       break;                         // a later page failed -> keep what we have
     }
-
-    const parsed = extractDepartures(data)
-      .map(raw => parseDeparture(raw, stationId))
-      .filter(Boolean);
 
     parsed.forEach(dep => {
       if (!collected.has(dep.id)) collected.set(dep.id, dep);
@@ -1899,15 +2374,29 @@ async function fetchStationDepartures(stationId, deep) {
     start = last;
   }
 
-  const result = [...collected.values()];
+  return [...collected.values()];
+}
 
-  departureCache.set(cacheKey, { timestamp: Date.now(), data: result });
+function rebuildLineKinds() {
+  lineKindMap = new Map();
 
-  return result;
+  for (const dep of allDepartures) {
+    const known = lineKindMap.get(dep.line);
+    if (!known || dep.kind === "schwebebahn") lineKindMap.set(dep.line, dep.kind);
+  }
+}
+
+function lineTitle(line) {
+  return lineKindMap.get(line) === "schwebebahn"
+    ? t("lineTitleSb", { line })
+    : t("lineTitle", { line });
+}
+
+function lineLabel(line) {
+  return line;
 }
 
 async function refreshDepartures() {
-  trackEvent("departures");
   if (!selectedStop) return;
 
   const stop = selectedStop;
@@ -1918,10 +2407,13 @@ async function refreshDepartures() {
   setStatus("statusUpdating");
 
   try {
+    let firstError = null;
+
     const results = await Promise.all(
       stop.ids.map(id =>
         fetchStationDepartures(id, deep).catch(error => {
           console.error("Departure request failed:", id, error);
+          firstError = firstError || error;
           return null;
         })
       )
@@ -1933,7 +2425,9 @@ async function refreshDepartures() {
     const successful = results.filter(Boolean);
 
     if (!successful.length) {
-      throw new AppError("allFailed");
+      throw firstError instanceof AppError && firstError.kind === "rate"
+        ? firstError
+        : new AppError("allFailed");
     }
 
     const received = successful.flat();
@@ -1946,11 +2440,17 @@ async function refreshDepartures() {
       .filter(isFutureDeparture)
       .sort((a, b) => a.timestamp - b.timestamp);
 
+    rebuildLineKinds();
+
     // Forget opened departures that have already left.
     const alive = new Set(allDepartures.map(dep => dep.id));
     [...expanded].forEach(id => { if (!alive.has(id)) expanded.delete(id); });
 
     boardMessage = null;
+    failStreak = 0;
+    nextRefreshAllowedAt = 0;
+    lastSuccessAt = Date.now();
+
     buildDirectionGroups();
     renderLineFilters();
     renderBoard();
@@ -1971,6 +2471,12 @@ async function refreshDepartures() {
     if (seq !== refreshSeq || stop !== selectedStop) return;
 
     console.error("Departure error:", error);
+
+    // Exponential back-off for the automatic refresh.
+    failStreak++;
+    nextRefreshAllowedAt = Date.now() +
+      Math.min(MAX_BACKOFF, REFRESH_INTERVAL * 2 ** failStreak);
+
     setStatus("statusError");
 
     // Keep showing the old data if we have it; otherwise show the error.
@@ -2223,12 +2729,14 @@ function renderTripPanel(panel, dep) {
 // FILTERING AND GROUPING
 // =====================================================
 
-function getFilteredDepartures() {
-  let result = [...allDepartures];
+function matchesTransport(item) {
+  if (transportFilter === "bus") return item.kind === "bus";
+  if (transportFilter === "schwebebahn") return item.kind === "schwebebahn";
+  return true;
+}
 
-  if (transportFilter === "bus") {
-    result = result.filter(item => item.isBus);
-  }
+function getFilteredDepartures() {
+  let result = allDepartures.filter(matchesTransport);
 
   if (onlyDelayed) {
     result = result.filter(item => item.cancelled || item.delay >= DELAYED_MIN);
@@ -2241,33 +2749,127 @@ function getFilteredDepartures() {
   return result.sort((a, b) => a.timestamp - b.timestamp);
 }
 
+const naturalCompare = (a, b) => String(a).localeCompare(String(b), "de", { numeric: true });
+
+function platformLabel(platform) {
+  if (!platform) return t("groupNoPlatform");
+  return platform.length <= 3 ? t("platform", { p: platform }) : platform;
+}
+
+// Groups the filtered departures by direction (destination), platform or line.
 function buildDirectionGroups() {
   const departures = getFilteredDepartures();
   const groups = new Map();
+
   for (const departure of departures) {
-    let key, destination, platform;
-    if (groupingMode === "list") {
-      key = String(departure.id); destination = departure.destination; platform = departure.platform;
-    } else if (groupingMode === "platform") {
-      key = String(departure.platform || "unknown");
-      destination = departure.platform ? t("platform", {p: departure.platform}) : t("platformUnknown");
-      platform = departure.platform;
-    } else {
-      key = normalizeName(departure.destination) + "|" + departure.platform;
-      destination = departure.destination; platform = departure.platform;
+    let key;
+
+    if (groupMode === "platform") key = departure.platform || "";
+    else if (groupMode === "line") key = departure.line;
+    else key = normalizeName(departure.destination);
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        id: groupMode + "|" + key,
+        key,
+        mode: groupMode,
+        kind: departure.kind,
+        total: 0,
+        destinations: [],
+        lines: [],
+        platforms: [],
+        departures: []
+      });
     }
-    if (!groups.has(key)) groups.set(key, {destination, platform, total:0, departures:[]});
-    const group = groups.get(key); group.total++; group.departures.push(departure);
+
+    const group = groups.get(key);
+    group.total++;
+    group.departures.push(departure);
+
+    if (!group.destinations.includes(departure.destination)) {
+      group.destinations.push(departure.destination);
+    }
+    if (!group.lines.includes(departure.line)) group.lines.push(departure.line);
+    if (departure.platform && !group.platforms.includes(departure.platform)) {
+      group.platforms.push(departure.platform);
+    }
+    if (departure.kind === "schwebebahn") group.kind = "schwebebahn";
   }
-  const perDirection = selectedLine ? DEPARTURES_PER_DIRECTION_WITH_LINE : DEPARTURES_PER_DIRECTION;
-  directionGroups = [...groups.values()].map(group => ({...group, departures:group.departures
-    .sort((a,b)=>a.timestamp-b.timestamp).slice(0, groupingMode === "list" ? 1 : perDirection)}))
-    .sort((a,b)=>(a.departures[0]?.timestamp||Infinity)-(b.departures[0]?.timestamp||Infinity));
-  const active = departures.filter(item=>!item.cancelled), late=active.filter(item=>item.delay>=1);
-  summaryStats = departures.length ? {onTime:active.filter(item=>item.hasRealtime&&item.delay<=0).length,
-    late:late.length,maxLate:late.reduce((m,i)=>Math.max(m,i.delay),0),cancelled:departures.length-active.length}:null;
-  currentPage=Math.min(currentPage,Math.max(1,Math.ceil(directionGroups.length/PAGE_SIZE))-1);
+
+  directionGroups = [...groups.values()].map(group => {
+    group.departures.sort((a, b) => a.timestamp - b.timestamp);
+    group.lines.sort(naturalCompare);
+    group.platforms.sort(naturalCompare);
+    group.firstTs = group.departures[0]?.timestamp || Infinity;
+    return group;
+  });
+
+  directionGroups.sort((a, b) => {
+    if (groupMode === "direction") return a.firstTs - b.firstTs;
+
+    // Platforms / lines in natural order; "no platform" goes last.
+    if (!a.key !== !b.key) return a.key ? -1 : 1;
+    return naturalCompare(a.key, b.key);
+  });
+
+  directionCount = new Set(departures.map(d => normalizeName(d.destination))).size;
+
+  // Delay statistics over everything that matches the filters.
+  const active = departures.filter(item => !item.cancelled);
+  const late = active.filter(item => item.delay >= 1);
+
+  summaryStats = departures.length
+    ? {
+        onTime: active.filter(item => item.hasRealtime && item.delay <= 0).length,
+        late: late.length,
+        maxLate: late.reduce((max, item) => Math.max(max, item.delay), 0),
+        cancelled: departures.length - active.length
+      }
+    : null;
+
+  const totalPages = Math.max(1, Math.ceil(directionGroups.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages - 1);
 }
+
+function groupTitle(group) {
+  if (group.mode === "platform") return platformLabel(group.key);
+  if (group.mode === "line") {
+    return group.kind === "schwebebahn"
+      ? t("lineTitleSb", { line: group.key })
+      : t("lineTitle", { line: group.key });
+  }
+  return group.destinations[0];
+}
+
+function destinationsText(group) {
+  const shown = group.destinations.slice(0, 3).join(", ");
+  const rest = group.destinations.length - 3;
+  return "→ " + shown + (rest > 0 ? " +" + rest : "");
+}
+
+function groupSub(group) {
+  if (group.mode === "direction") {
+    return t("groupLinesSub", { lines: group.lines.join(", ") });
+  }
+  return destinationsText(group);
+}
+
+function groupRight(group) {
+  const parts = [];
+
+  if (group.mode !== "platform" && group.platforms.length) {
+    parts.push(group.platforms.length === 1
+      ? platformLabel(group.platforms[0])
+      : t("platformsMany", { p: group.platforms.join(", ") }));
+  }
+
+  parts.push(countText(group.total));
+  return parts.join(" · ");
+}
+
+// =====================================================
+// LINE FILTER BUTTONS
+// =====================================================
 
 function renderLineFilters() {
   const container = $("lineFilters");
@@ -2275,24 +2877,23 @@ function renderLineFilters() {
 
   container.textContent = "";
 
-  const departures = allDepartures.filter(item =>
-    transportFilter === "all" || item.isBus
-  );
+  const departures = allDepartures.filter(matchesTransport);
 
   const lineSet = new Set(departures.map(item => item.line).filter(Boolean));
 
   // The selected line stays visible even if it has no departures right now.
   if (selectedLine) lineSet.add(selectedLine);
 
-  const lines = [...lineSet].sort((a, b) =>
-    a.localeCompare(b, "de", { numeric: true })
-  );
+  const lines = [...lineSet].sort(naturalCompare);
 
   caption.hidden = lines.length === 0;
 
   lines.slice(0, MAX_LINE_BUTTONS).forEach(lineNumber => {
-    const button = el("button", "line-button", lineNumber);
+    const isSb = lineKindMap.get(lineNumber) === "schwebebahn";
+    const button = el("button", isSb ? "line-button line-sb" : "line-button", lineLabel(lineNumber));
     button.type = "button";
+
+    if (isSb) button.title = t("lineTitleSb", { line: lineNumber });
 
     if (selectedLine === lineNumber) {
       button.classList.add("active");
@@ -2301,6 +2902,7 @@ function renderLineFilters() {
     button.addEventListener("click", () => {
       haptic();
       selectedLine = selectedLine === lineNumber ? null : lineNumber;
+      if (selectedLine) track("line", lineNumber);
       onFilterChanged({ reload: true });
     });
 
@@ -2310,18 +2912,26 @@ function renderLineFilters() {
 
 function updateFilterButtons() {
   $("busFilter").className = transportFilter === "bus" ? "active" : "secondary";
+  $("sbFilter").className = transportFilter === "schwebebahn" ? "active" : "secondary";
   $("allFilter").className = transportFilter === "all" ? "active" : "secondary";
   $("delayedFilter").className = onlyDelayed ? "active" : "secondary";
   $("allLinesFilter").className = selectedLine ? "active" : "secondary";
 
   $("delayedFilter").textContent = t("filterDelayed");
   $("allLinesFilter").textContent = selectedLine
-    ? t("filterLineSel", { line: selectedLine })
+    ? t("filterLineSel", { line: lineTitle(selectedLine) })
     : t("filterAllLines");
 
   $("busFilter").setAttribute("aria-pressed", String(transportFilter === "bus"));
+  $("sbFilter").setAttribute("aria-pressed", String(transportFilter === "schwebebahn"));
   $("allFilter").setAttribute("aria-pressed", String(transportFilter === "all"));
   $("delayedFilter").setAttribute("aria-pressed", String(onlyDelayed));
+
+  document.querySelectorAll("#groupSwitch button").forEach(button => {
+    const active = button.dataset.group === groupMode;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
 }
 
 // Re-applies the filters. With reload = true the data is fetched again,
@@ -2356,6 +2966,10 @@ function emptyMessage() {
 
   if (transportFilter === "bus" && allDepartures.length) {
     return { key: "noBuses", vars: { n: allDepartures.length } };
+  }
+
+  if (transportFilter === "schwebebahn" && allDepartures.length) {
+    return { key: "noSb", vars: { n: allDepartures.length } };
   }
 
   return { key: "noDepartures" };
@@ -2469,7 +3083,7 @@ function renderStatusLine(dep) {
   return el("div", "on-time", t("onTime"));
 }
 
-function renderDeparture(dep) {
+function renderDeparture(dep, group) {
   const wrap = el("div", "dep-wrap");
 
   const row = el("div", "departure");
@@ -2481,9 +3095,8 @@ function renderDeparture(dep) {
 
   row.setAttribute("aria-expanded", String(expanded.has(dep.id)));
 
-  const lineLabel = String(dep.line) === "60" ? "Schwebebahn" : dep.line;
-  const line = el("div", "line", lineLabel);
-  if (String(dep.line) === "60") line.classList.add("line-schwebebahn");
+  const isSb = dep.kind === "schwebebahn";
+  const line = el("div", isSb ? "line line-sb" : "line", dep.line);
 
   const info = el("div");
 
@@ -2501,8 +3114,16 @@ function renderDeparture(dep) {
     etaRefs.push({ el: eta, dep });
   }
 
-  const plannedText = t("planned", { time: formatTime(dep.planned) });
-  const planned = el("div", "destination", groupingMode === "direction" ? plannedText : (dep.destination + " · " + plannedText));
+  // Sub line: planned time plus whatever the card header does not show.
+  const plannedParts = [t("planned", { time: formatTime(dep.planned) })];
+
+  if (isSb) plannedParts.push(t("kindSb"));
+  if (group && group.mode !== "direction") plannedParts.push("→ " + dep.destination);
+  if (group && group.mode !== "platform" && group.platforms.length > 1 && dep.platform) {
+    plannedParts.push(platformLabel(dep.platform));
+  }
+
+  const planned = el("div", "destination", plannedParts.join(" · "));
 
   info.append(timeRow, planned, renderStatusLine(dep));
 
@@ -2526,6 +3147,7 @@ function renderDeparture(dep) {
     } else {
       expanded.add(dep.id);
       renderTripPanel(panel, dep);
+      track("trip", dep.line);
       loadTrip(dep);
     }
 
@@ -2553,6 +3175,7 @@ function renderBoard() {
   tripRefs.clear();
 
   $("summary").hidden = true;
+  $("groupBar").hidden = true;
   $("pagination").hidden = true;
   $("dataNote").hidden = true;
 
@@ -2580,17 +3203,42 @@ function renderBoard() {
 
   renderSummary();
 
+  $("groupBar").hidden = false;
+
+  const perGroup = selectedLine
+    ? DEPARTURES_PER_DIRECTION_WITH_LINE
+    : DEPARTURES_PER_DIRECTION;
+
   pageGroups.forEach(group => {
     const card = el("div", "direction");
 
     const title = el("div", "direction-title");
-    title.appendChild(el("span", "", group.destination));
-    const meta = groupingMode === "list" ? "" : (groupingMode === "platform" ? countText(group.total) :
-      (group.platform ? t("platform", {p:group.platform}) + " · " + countText(group.total) : countText(group.total)));
-    if (meta) title.appendChild(el("small", "", meta));
-    if (groupingMode !== "list") card.appendChild(title);
+    const main = el("div", "dt-main");
+    main.appendChild(el("div", "dt-title", groupTitle(group)));
 
-    group.departures.forEach(dep => card.appendChild(renderDeparture(dep)));
+    const sub = groupSub(group);
+    if (sub) main.appendChild(el("div", "dt-sub", sub));
+
+    title.append(main, el("small", "", groupRight(group)));
+    card.appendChild(title);
+
+    const open = moreGroups.has(group.id);
+    const shown = open ? group.departures : group.departures.slice(0, perGroup);
+
+    shown.forEach(dep => card.appendChild(renderDeparture(dep, group)));
+
+    if (group.departures.length > perGroup) {
+      const more = el("button", "secondary more-button", open
+        ? t("groupLess")
+        : t("groupMore", { n: group.departures.length - perGroup }));
+      more.type = "button";
+      more.addEventListener("click", () => {
+        haptic();
+        if (open) moreGroups.delete(group.id); else moreGroups.add(group.id);
+        renderBoard();
+      });
+      card.appendChild(more);
+    }
 
     container.appendChild(card);
   });
@@ -2601,7 +3249,7 @@ function renderBoard() {
   $("nextButton").disabled = currentPage >= totalPages - 1;
 
   const singleDirection =
-    Boolean(selectedLine) && !onlyDelayed && directionGroups.length === 1;
+    Boolean(selectedLine) && !onlyDelayed && directionCount === 1;
 
   renderDataNote(singleDirection);
 }
@@ -2631,17 +3279,8 @@ function setLoading(flag) {
 }
 
 // Re-renders everything that contains text (used when the language changes).
-function renderGroupingButtons() {
-  document.querySelectorAll("[data-group]").forEach(button => {
-    button.classList.toggle("active", button.dataset.group === groupingMode);
-    button.setAttribute("aria-pressed", String(button.dataset.group === groupingMode));
-  });
-}
-
 function renderAll() {
   applyStaticTexts();
-  renderGroupingButtons();
-  $("aboutPanel").textContent = t("aboutText");
   updateFilterButtons();
   renderBoardTitle();
   renderRecent();
@@ -2650,32 +3289,47 @@ function renderAll() {
   renderLineFilters();
   renderStatus();
   renderBoard();
+  renderSheet();
 }
 
 // =====================================================
 // EVENTS
 // =====================================================
-document.querySelectorAll("[data-group]").forEach(button => button.addEventListener("click", () => {
-  groupingMode = button.dataset.group; storageSet(STORAGE_GROUPING, groupingMode);
-  currentPage = 0; renderGroupingButtons(); buildDirectionGroups(); renderBoard();
-}));
-$("aboutButton").addEventListener("click", () => { $("aboutPanel").hidden = !$("aboutPanel").hidden; });
-
 
 document.querySelectorAll("#langSwitch button").forEach(button => {
   button.addEventListener("click", () => setLanguage(button.dataset.lang));
 });
 
-$("busFilter").addEventListener("click", () => {
-  transportFilter = "bus";
+function setTransport(value) {
+  if (transportFilter === value && !selectedLine) return;
+  const hadLine = Boolean(selectedLine);
+  transportFilter = value;
   selectedLine = null;
-  onFilterChanged();
-});
+  track("filter", value);
+  onFilterChanged({ reload: hadLine });
+}
 
-$("allFilter").addEventListener("click", () => {
-  transportFilter = "all";
-  selectedLine = null;
-  onFilterChanged();
+$("busFilter").addEventListener("click", () => setTransport("bus"));
+$("sbFilter").addEventListener("click", () => setTransport("schwebebahn"));
+$("allFilter").addEventListener("click", () => setTransport("all"));
+
+document.querySelectorAll("#groupSwitch button").forEach(button => {
+  button.addEventListener("click", () => {
+    const mode = button.dataset.group;
+    if (!GROUP_MODES.includes(mode) || mode === groupMode) return;
+
+    haptic();
+    groupMode = mode;
+    storageSet(STORAGE_GROUP, mode);
+    track("group", mode);
+
+    moreGroups.clear();
+    currentPage = 0;
+    updateFilterButtons();
+
+    if (selectedStop && !boardMessage) buildDirectionGroups();
+    renderBoard();
+  });
 });
 
 $("delayedFilter").addEventListener("click", () => {
@@ -2717,9 +3371,15 @@ $("searchInput").addEventListener("keydown", event => {
 });
 
 $("refreshButton").addEventListener("click", () => {
+  // Throttle manual refreshes (the API proxy has a rate limit).
+  if (Date.now() - lastManualAt < MANUAL_REFRESH_COOLDOWN) return;
+  lastManualAt = Date.now();
+
   // Forced refresh: drop the cache of the selected stop.
   if (selectedStop) clearDepartureCacheFor(selectedStop.ids);
 
+  failStreak = 0;
+  nextRefreshAllowedAt = 0;
   refreshDepartures();
 });
 
@@ -2731,7 +3391,11 @@ function startAutoRefresh() {
   stopAutoRefresh();
 
   refreshTimer = setInterval(() => {
-    if (selectedStop && !document.hidden) {
+    if (
+      selectedStop && !document.hidden &&
+      Date.now() >= nextRefreshAllowedAt &&
+      Date.now() >= rateLimitedUntil
+    ) {
       refreshDepartures();
     }
   }, REFRESH_INTERVAL);
@@ -2765,9 +3429,346 @@ etaTimer = setInterval(() => {
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) renderRecent();
 
-  if (!document.hidden && selectedStop) {
-    clearDepartureCacheFor(selectedStop.ids);
+  // Refresh on return only when the data is really old.
+  if (
+    !document.hidden && selectedStop &&
+    Date.now() - lastSuccessAt > VISIBILITY_REFRESH_MIN &&
+    Date.now() >= rateLimitedUntil
+  ) {
     refreshDepartures();
+  }
+});
+
+// =====================================================
+// ANONYMOUS STATISTICS (optional, disabled while STATS_URL is empty)
+// =====================================================
+
+let statsSent = 0;
+
+function doNotTrack() {
+  return navigator.doNotTrack === "1" || window.doNotTrack === "1";
+}
+
+function statsEnabled() {
+  return Boolean(STATS_URL) && !doNotTrack() && storageGet(STORAGE_STATS) !== "off";
+}
+
+// Sends one anonymous counter event. No identifiers are stored on the device;
+// the server only counts. Never throws and never blocks the UI.
+function track(event, key) {
+  if (!statsEnabled() || statsSent >= STATS_MAX_EVENTS) return;
+  statsSent++;
+
+  try {
+    fetch(STATS_URL, {
+      method: "POST",
+      mode: "cors",
+      credentials: "omit",
+      keepalive: true,
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: JSON.stringify({
+        e: event,
+        k: key ? String(key).slice(0, 60) : "",
+        v: APP_VERSION
+      })
+    }).catch(() => {});
+  } catch { /* ignore */ }
+}
+
+// =====================================================
+// ABOUT / DATENSCHUTZ / IMPRESSUM (bottom sheet)
+// =====================================================
+
+const LEGAL_TEXT = {
+  de: {
+    privacy: [
+      { h: "1. Verantwortlicher", p: [{ provider: true }] },
+      { h: "2. Überblick", p: [
+        `Diese Mini-App zeigt Abfahrten und Verspätungen von Bussen und der Schwebebahn in Wuppertal. Es gibt keine Registrierung, keine Cookies, keine Werbung und keine Standortabfrage.`,
+        `Wenn du die App in Telegram öffnest, liest sie weder deinen Namen noch deine Telegram-ID oder Telefonnummer aus.`
+      ] },
+      { h: "3. Bereitstellung der App", p: [
+        `Die App wird über GitHub Pages ausgeliefert. Dabei verarbeitet der Hosting-Anbieter technisch notwendige Verbindungsdaten (z. B. IP-Adresse, Zeitpunkt, Browserkennung). Außerdem wird das Skript telegram-web-app.js von telegram.org geladen.`,
+        `Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (sicherer und stabiler Betrieb der App).`
+      ] },
+      { h: "4. Fahrplanabfragen", p: [
+        `Haltestellensuche und Abfahrten werden über einen Proxy auf Cloudflare Workers an den VRR OpenService weitergeleitet. Dabei wird deine IP-Adresse technisch verarbeitet, um Anfragen zu begrenzen (Rate Limiting), Antworten kurz zwischenzuspeichern (ca. 15 Sekunden) und Missbrauch zu verhindern. Gesucht wird nur nach Haltestellennamen; es werden keine Personenangaben übertragen.`,
+        `Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.`
+      ] },
+      { h: "5. Lokaler Speicher auf deinem Gerät", p: [
+        `Die App speichert im Browser-Speicher (localStorage) ausschließlich: gewählte Sprache, zuletzt gewählte Haltestellen (höchstens 5, automatisch gelöscht nach 30 Tagen), die gewählte Gruppierung und deine Entscheidung zur Statistik. Diese Daten verlassen dein Gerät nicht. Die zuletzt gewählten Haltestellen kannst du mit „Löschen“ entfernen, alles andere über die Browser- bzw. Telegram-Daten.`
+      ] },
+      { h: "6. Anonyme Nutzungsstatistik", stats: true, p: [
+        `Um zu wissen, wie viele Menschen die App nutzen, werden anonyme Zähler erfasst: Aufruf der App, gewählte Haltestelle, Linie, Sprache, Gruppierung und Filter. Es werden keine Cookies gesetzt und keine Kennung auf deinem Gerät gespeichert.`,
+        `Zur Zählung eindeutiger Nutzer pro Tag wird aus IP-Adresse und Browserkennung mit einem täglich wechselnden geheimen Schlüssel ein Hash gebildet. Er kann nicht zurückgerechnet werden, wird höchstens 2 Tage aufbewahrt und danach gelöscht. Dauerhaft bleiben nur zusammengefasste Zählerwerte.`,
+        `Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (Interesse an Reichweitenmessung und Weiterentwicklung). Du kannst die Statistik unter „Über die App“ jederzeit ausschalten; „Do Not Track“ wird beachtet.`
+      ] },
+      { h: "7. Speicherdauer", p: [
+        `Technische Verbindungsdaten werden nur so lange gespeichert, wie es für den Betrieb nötig ist. Lokale Daten bleiben auf deinem Gerät, bis du sie löschst oder die Frist abläuft.`
+      ] },
+      { h: "8. Deine Rechte", p: [
+        `Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch (Art. 15–21 DSGVO). Wegen der Anonymität der Daten kann eine Zuordnung zu deiner Person oft nicht erfolgen.`,
+        `Du kannst dich bei einer Aufsichtsbehörde beschweren, z. B. bei der Landesbeauftragten für Datenschutz und Informationsfreiheit Nordrhein-Westfalen (ldi.nrw.de).`,
+        `Eine automatisierte Entscheidungsfindung findet nicht statt.`
+      ] }
+    ],
+    imprint: [
+      { h: "Angaben gemäß § 5 DDG", p: [{ provider: true }] },
+      { h: "Haftung für Inhalte", p: [
+        `Die Fahrplandaten stammen vom VRR OpenService und werden ohne Gewähr angezeigt. Für Richtigkeit, Vollständigkeit und Aktualität von Abfahrtszeiten, Verspätungen und Haltestellenfolgen wird keine Haftung übernommen. Maßgeblich sind die Aushänge und Auskünfte der Verkehrsunternehmen.`
+      ] },
+      { h: "Unabhängiges Projekt", p: [
+        `Dieses Projekt steht in keiner Verbindung zu VRR, WSW mobil oder Telegram. Genannte Namen und Marken gehören den jeweiligen Inhabern.`
+      ] }
+    ]
+  },
+  ru: {
+    privacy: [
+      { h: "1. Ответственное лицо", p: [{ provider: true }] },
+      { h: "2. Обзор", p: [
+        `Мини-приложение показывает отправления и задержки автобусов и Швебебана в Вуппертале. Нет регистрации, cookie, рекламы и запроса геолокации.`,
+        `При открытии в Telegram приложение не считывает ваше имя, Telegram-ID или номер телефона.`
+      ] },
+      { h: "3. Предоставление приложения", p: [
+        `Приложение раздаётся через GitHub Pages. Хостинг-провайдер технически обрабатывает данные соединения (например, IP-адрес, время, данные браузера). Дополнительно загружается скрипт telegram-web-app.js с telegram.org.`,
+        `Правовое основание: ст. 6(1)(f) GDPR (безопасная и стабильная работа приложения).`
+      ] },
+      { h: "4. Запросы расписания", p: [
+        `Поиск остановок и отправления передаются через прокси на Cloudflare Workers в VRR OpenService. При этом технически обрабатывается ваш IP-адрес — чтобы ограничивать число запросов (rate limiting), кратко кэшировать ответы (около 15 секунд) и предотвращать злоупотребления. Ищутся только названия остановок; персональные данные не передаются.`,
+        `Правовое основание: ст. 6(1)(f) GDPR.`
+      ] },
+      { h: "5. Локальное хранилище на устройстве", p: [
+        `В памяти браузера (localStorage) хранятся только: выбранный язык, недавние остановки (не более 5, автоматически удаляются через 30 дней), выбранная группировка и ваш выбор по статистике. Эти данные не покидают устройство. Недавние остановки можно удалить кнопкой «Очистить», остальное — через данные браузера или Telegram.`
+      ] },
+      { h: "6. Анонимная статистика", stats: true, p: [
+        `Чтобы понимать, сколько людей пользуется приложением, собираются анонимные счётчики: открытие приложения, выбранная остановка, маршрут, язык, группировка и фильтр. Cookie не используются, идентификатор на устройстве не сохраняется.`,
+        `Для подсчёта уникальных пользователей за день из IP-адреса и данных браузера с ежедневно меняющимся секретным ключом формируется хеш. Его нельзя обратить, он хранится не дольше 2 дней и затем удаляется. Постоянно остаются только суммарные счётчики.`,
+        `Правовое основание: ст. 6(1)(f) GDPR (интерес к измерению аудитории и развитию приложения). Статистику можно в любой момент отключить в разделе «О приложении»; сигнал «Do Not Track» учитывается.`
+      ] },
+      { h: "7. Сроки хранения", p: [
+        `Технические данные соединения хранятся только столько, сколько нужно для работы. Локальные данные остаются на вашем устройстве, пока вы их не удалите или не истечёт срок.`
+      ] },
+      { h: "8. Ваши права", p: [
+        `У вас есть право на доступ, исправление, удаление, ограничение обработки, переносимость данных и возражение (ст. 15–21 GDPR). Из-за анонимности данных привязать их к конкретному человеку часто невозможно.`,
+        `Вы можете подать жалобу в надзорный орган, например в Уполномоченного по защите данных земли Северный Рейн — Вестфалия (ldi.nrw.de).`,
+        `Автоматизированное принятие решений не используется.`
+      ] }
+    ],
+    imprint: [
+      { h: "Сведения согласно § 5 DDG", p: [{ provider: true }] },
+      { h: "Ответственность за содержание", p: [
+        `Данные расписаний поступают из VRR OpenService и показываются без гарантии. За точность, полноту и актуальность времени отправления, задержек и списка остановок ответственность не принимается. Определяющими являются объявления и информация транспортных компаний.`
+      ] },
+      { h: "Независимый проект", p: [
+        `Проект не связан с VRR, WSW mobil или Telegram. Упомянутые названия и марки принадлежат их владельцам.`
+      ] }
+    ]
+  }
+};
+
+let currentSheet = null;      // "about" | "privacy" | "imprint" | null
+let sheetOpener = null;
+
+function openExternal(url) {
+  try {
+    if (tg && /^https:\/\/t\.me\//.test(url) && tg.openTelegramLink) {
+      tg.openTelegramLink(url);
+    } else if (tg && tg.openLink) {
+      tg.openLink(url);
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
+
+function externalLink(url, label, className) {
+  const a = el("a", className, label);
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  a.dataset.ext = "1";
+  return a;
+}
+
+function providerBlock() {
+  const lines = [LEGAL.name, LEGAL.street, LEGAL.zipCity].map(v => (v || "").trim()).filter(Boolean);
+
+  if (!lines.length) lines.push(t("legalMissing"));
+  if ((LEGAL.email || "").trim()) lines.push(t("legalEmail", { v: LEGAL.email.trim() }));
+  lines.push(t("legalContact", { v: AUTHOR_HANDLE }));
+
+  return el("p", "provider", lines.join("\n"));
+}
+
+function renderLegalSheet(body, kind) {
+  const sections = LEGAL_TEXT[lang]?.[kind] || LEGAL_TEXT.de[kind];
+
+  if (lang !== "de") body.appendChild(el("p", "legal-note", t("legalLangNote")));
+
+  sections.forEach(section => {
+    if (section.stats && !STATS_URL) return;   // no statistics -> no paragraph
+
+    body.appendChild(el("h4", "", section.h));
+
+    section.p.forEach(item => {
+      body.appendChild(item.provider ? providerBlock() : el("p", "", item));
+    });
+  });
+
+  body.appendChild(el("p", "legal-note", t("legalUpdated", { v: LEGAL_UPDATED })));
+}
+
+function renderAboutSheet(body) {
+  const brand = el("div", "about-brand");
+  brand.append(el("strong", "", t("docTitle")), el("span", "muted", t("aboutVersion", { v: APP_VERSION })));
+  body.appendChild(brand);
+
+  body.appendChild(el("p", "sheet-lead", t("aboutLead")));
+
+  const card = el("div", "about-card");
+  card.appendChild(el("div", "muted", t("aboutBy")));
+  card.appendChild(externalLink(AUTHOR_TELEGRAM_URL, AUTHOR_HANDLE, "about-handle"));
+
+  const links = el("div", "about-links");
+  links.append(
+    externalLink(AUTHOR_TELEGRAM_URL, "Telegram", "btn-link"),
+    externalLink(AUTHOR_GITHUB_URL, "GitHub", "btn-link outline")
+  );
+  card.appendChild(links);
+
+  body.appendChild(card);
+
+  body.appendChild(el("p", "", t("aboutFeedback")));
+  body.appendChild(externalLink(AUTHOR_TELEGRAM_URL, t("aboutWrite"), "btn-link"));
+
+  body.appendChild(el("p", "muted about-data", t("aboutData")));
+
+  if (STATS_URL) {
+    const label = el("label", "switch");
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = statsEnabled();
+    box.disabled = doNotTrack();
+
+    box.addEventListener("change", () => {
+      storageSet(STORAGE_STATS, box.checked ? "on" : "off");
+    });
+
+    const text = el("span");
+    text.appendChild(document.createTextNode(t("statsLabel")));
+    text.appendChild(el("small", "", doNotTrack() ? t("statsDnt") : t("statsHint")));
+
+    label.append(box, text);
+    body.appendChild(label);
+  }
+
+  const nav = el("div", "sheet-links");
+  [["privacy", "linkPrivacy"], ["imprint", "linkImprint"]].forEach(([kind, key]) => {
+    const b = el("button", "link-button", t(key));
+    b.type = "button";
+    b.addEventListener("click", () => openSheet(kind, true));
+    nav.appendChild(b);
+  });
+  body.appendChild(nav);
+}
+
+function renderSheet() {
+  const sheet = $("sheet");
+  if (!currentSheet) return;
+
+  const titleKey = { about: "sheetAbout", privacy: "sheetPrivacy", imprint: "sheetImprint" }[currentSheet];
+  $("sheetTitle").textContent = t(titleKey);
+  $("sheetClose").setAttribute("aria-label", t("close"));
+
+  const body = $("sheetBody");
+  body.textContent = "";
+
+  if (currentSheet === "about") renderAboutSheet(body);
+  else renderLegalSheet(body, currentSheet);
+
+  sheet.hidden = false;
+}
+
+function openSheet(kind, keepOpener) {
+  if (!keepOpener) sheetOpener = document.activeElement;
+  currentSheet = kind;
+  haptic();
+
+  renderSheet();
+  $("sheetBody").scrollTop = 0;
+  $("sheet").querySelector(".sheet-card").scrollTop = 0;
+  document.body.classList.add("no-scroll");
+
+  try {
+    if (tg?.BackButton) { tg.BackButton.show(); }
+  } catch { /* ignore */ }
+
+  $("sheetClose").focus();
+}
+
+function closeSheet() {
+  if (!currentSheet) return;
+
+  currentSheet = null;
+  $("sheet").hidden = true;
+  document.body.classList.remove("no-scroll");
+
+  try { tg?.BackButton?.hide(); } catch { /* ignore */ }
+
+  if (sheetOpener && sheetOpener.focus) sheetOpener.focus();
+  sheetOpener = null;
+}
+
+try { tg?.BackButton?.onClick(closeSheet); } catch { /* ignore */ }
+
+$("aboutButton").addEventListener("click", () => openSheet("about"));
+$("sheetClose").addEventListener("click", closeSheet);
+
+$("sheet").addEventListener("click", event => {
+  if (event.target === $("sheet")) closeSheet();
+});
+
+document.querySelectorAll("[data-sheet]").forEach(button => {
+  button.addEventListener("click", () => openSheet(button.dataset.sheet));
+});
+
+// External links: use Telegram's own openers inside the Mini App.
+document.addEventListener("click", event => {
+  const link = event.target.closest?.("a[data-ext]");
+  if (!link || !tg) return;
+
+  event.preventDefault();
+  openExternal(link.href);
+});
+
+document.addEventListener("keydown", event => {
+  if (!currentSheet) return;
+
+  if (event.key === "Escape") {
+    closeSheet();
+    return;
+  }
+
+  // Keep keyboard focus inside the sheet.
+  if (event.key === "Tab") {
+    const items = [...$("sheet").querySelectorAll("a[href], button:not([disabled]), input:not([disabled])")];
+    if (!items.length) return;
+
+    const first = items[0];
+    const last = items[items.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    } else if (!$("sheet").contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 });
 
@@ -2776,7 +3777,7 @@ document.addEventListener("visibilitychange", () => {
 // =====================================================
 
 renderAll();
-trackEvent("open");
+track("open");
 
 console.log("Wuppertal Verkehr started. Language:", lang);
 console.log("VRR API:", API_BASE);
