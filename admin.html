@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Статистика бота</title>
+<style>
+  :root {
+    --bg: #f5f7fa; --panel: #ffffff; --text: #16202e; --muted: #5d6b7e;
+    --border: #dbe2ea; --accent: #2563eb; --bar2: #93b4f5; --bad: #b42318;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1623; --panel: #172033; --text: #e8eef7; --muted: #9aa8bc;
+            --border: #26344d; --accent: #58a6ff; --bar2: #2f5a94; --bad: #ff8a80; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 4px 0 14px; }
+  h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+           padding: 14px; margin-bottom: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  input, select, button { font: inherit; padding: 9px 11px; border-radius: 10px;
+           border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  input { flex: 1 1 220px; min-width: 0; }
+  button { background: var(--accent); color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .kpi b { display: block; font-size: 26px; line-height: 1.2; }
+  .kpi span { color: var(--muted); font-size: 13px; }
+  .chart { display: flex; align-items: flex-end; gap: 2px; height: 140px; }
+  .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 2px; }
+  .col i { display: block; background: var(--accent); border-radius: 2px 2px 0 0; }
+  .col u { display: block; background: var(--bar2); }
+  .axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .legend { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .legend i, .legend u { display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+           vertical-align: -1px; margin: 0 4px 0 0; text-decoration: none; }
+  .legend i { background: var(--accent); } .legend u { background: var(--bar2); margin-left: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 5px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+  td:last-child { text-align: right; white-space: nowrap; padding-left: 10px; }
+  tr:first-child td { border-top: 0; }
+  .err { color: var(--bad); margin: 8px 0 0; }
+  .note { color: var(--muted); font-size: 12px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Статистика Wuppertal Verkehr</h1>
+
+  <div class="panel" id="login">
+    <h2>Подключение</h2>
+    <div class="row">
+      <input id="url" placeholder="https://wuppertal-stats.ВАШ-АККАУНТ.workers.dev" autocomplete="off">
+      <input id="token" type="password" placeholder="ADMIN_TOKEN" autocomplete="off">
+      <select id="range">
+        <option value="7">7 дней</option>
+        <option value="30" selected>30 дней</option>
+        <option value="90">90 дней</option>
+      </select>
+      <button id="load" type="button">Показать</button>
+    </div>
+    <p class="err" id="error" hidden></p>
+    <p class="note">Токен хранится только до закрытия вкладки. Адрес воркера запоминается в браузере.</p>
+  </div>
+
+  <div id="out" hidden>
+    <div class="kpis panel" id="kpis"></div>
+
+    <div class="panel">
+      <h2>По дням</h2>
+      <div class="chart" id="chart"></div>
+      <div class="axis"><span id="from"></span><span id="to"></span></div>
+      <div class="legend"><i></i>Уникальные посетители <u></u>Открытия</div>
+    </div>
+
+    <div class="grid">
+      <div class="panel"><h2>Популярные остановки</h2><table id="stops"></table></div>
+      <div class="panel"><h2>Популярные маршруты</h2><table id="lines"></table></div>
+      <div class="panel"><h2>Язык</h2><table id="lang"></table></div>
+      <div class="panel"><h2>Группировка</h2><table id="group"></table></div>
+      <div class="panel"><h2>Фильтр транспорта</h2><table id="filter"></table></div>
+    </div>
+
+    <p class="note" id="foot"></p>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const NAMES = { de: "Немецкий", ru: "Русский", direction: "По направлению", platform: "По платформе",
+                line: "По маршруту", bus: "Автобусы", schwebebahn: "Швебебан", all: "Весь транспорт" };
+
+function safeGet(s, k) { try { return s.getItem(k) || ""; } catch { return ""; } }
+function safeSet(s, k, v) { try { s.setItem(k, v); } catch { /* ignore */ } }
+
+$("url").value = safeGet(localStorage, "adm_url");
+$("token").value = safeGet(sessionStorage, "adm_token");
+$("range").value = safeGet(localStorage, "adm_range") || "30";
+
+function showError(text) { $("error").textContent = text; $("error").hidden = !text; }
+
+function kpi(value, label) {
+  const box = document.createElement("div");
+  box.className = "kpi";
+  const b = document.createElement("b"); b.textContent = String(value);
+  const s = document.createElement("span"); s.textContent = label;
+  box.append(b, s);
+  return box;
+}
+
+function fillTable(id, rows, label) {
+  const table = $(id);
+  table.textContent = "";
+  const total = rows.reduce((a, r) => a + r.count, 0);
+
+  if (!rows.length) {
+    const tr = table.insertRow(); tr.insertCell().textContent = "Нет данных"; tr.insertCell().textContent = "";
+    return;
+  }
+
+  rows.forEach(r => {
+    const tr = table.insertRow();
+    tr.insertCell().textContent = label ? (NAMES[r.key] || r.key) : r.key;
+    tr.insertCell().textContent = label && total
+      ? r.count + " (" + Math.round(r.count / total * 100) + "%)"
+      : String(r.count);
+  });
+}
+
+function render(d) {
+  const today = d.days[d.days.length - 1] || { visitors: 0, opens: 0 };
+  const week = d.days.slice(-7);
+  const sum = (arr, f) => arr.reduce((a, x) => a + x[f], 0);
+
+  const k = $("kpis");
+  k.textContent = "";
+  k.append(
+    kpi(today.visitors, "посетителей сегодня"),
+    kpi(today.opens, "открытий сегодня"),
+    kpi(sum(week, "visitors"), "посетителей за 7 дн. (сумма по дням)"),
+    kpi(d.totals.opens, "открытий за период"),
+    kpi(d.totals.trips, "раскрытых рейсов за период")
+  );
+
+  const max = Math.max(1, ...d.days.map(x => Math.max(x.visitors, x.opens)));
+  const chart = $("chart");
+  chart.textContent = "";
+
+  d.days.forEach(x => {
+    const col = document.createElement("div");
+    col.className = "col";
+    col.title = x.day + ": " + x.visitors + " посет., " + x.opens + " откр.";
+    const o = document.createElement("u"); o.style.height = (x.opens / max * 100) + "%";
+    const v = document.createElement("i"); v.style.height = (x.visitors / max * 100) + "%";
+    col.append(o, v);
+    chart.appendChild(col);
+  });
+
+  $("from").textContent = d.days[0]?.day || "";
+  $("to").textContent = d.days[d.days.length - 1]?.day || "";
+
+  fillTable("stops", d.top.stops);
+  fillTable("lines", d.top.lines);
+  fillTable("lang", d.splits.lang, true);
+  fillTable("group", d.splits.group, true);
+  fillTable("filter", d.splits.filter, true);
+
+  $("foot").textContent = "Уникальные посетители считаются отдельно для каждого дня (хеш меняется ежедневно), " +
+    "поэтому сумма по дням — это не число разных людей. Обновлено: " + new Date(d.generated).toLocaleString("ru-RU");
+  $("out").hidden = false;
+}
+
+async function load() {
+  showError("");
+  const base = $("url").value.trim().replace(/\/+$/, "").replace(/\/stats$/, "");
+  const token = $("token").value.trim();
+
+  if (!/^https:\/\//.test(base) || !token) { showError("Укажите адрес воркера (https://…) и токен."); return; }
+
+  safeSet(localStorage, "adm_url", base);
+  safeSet(localStorage, "adm_range", $("range").value);
+  safeSet(sessionStorage, "adm_token", token);
+
+  $("load").disabled = true;
+  try {
+    const res = await fetch(base + "/stats?days=" + encodeURIComponent($("range").value), {
+      headers: { Authorization: "Bearer " + token }, cache: "no-store"
+    });
+    if (res.status === 401) throw new Error("Неверный токен.");
+    if (!res.ok) throw new Error("Ошибка сервера: " + res.status);
+    render(await res.json());
+  } catch (e) {
+    $("out").hidden = true;
+    showError(e instanceof TypeError ? "Не удалось связаться с воркером. Проверьте адрес." : e.message);
+  } finally {
+    $("load").disabled = false;
+  }
+}
+
+$("load").addEventListener("click", load);
+$("token").addEventListener("keydown", e => { if (e.key === "Enter") load(); });
+if ($("url").value && $("token").value) load();
+</script>
+</body>
+</html>
